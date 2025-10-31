@@ -1200,7 +1200,7 @@ gene_counts <- table(all_genes)
 kfold_notmm_upregulated_genes <- names(gene_counts[gene_counts >= 3])
 
 candidate_genes <- list(TMM = c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", "MAGEA9", "SPEF1", "TERT", "WDR74"))
-candidate_genes2 <- list(TMM = c("ACADM", "EIF4G3", "EPS8L1", "FAXCD2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2"))
+candidate_genes2 <- list(TMM = c("ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2"))
 
 # upregulated in NO_TMM.
 gsvapar <- gsvaParam(as.matrix(lcpm), candidate_genes, kcdf = "Gaussian")

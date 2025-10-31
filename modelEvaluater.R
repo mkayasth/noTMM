@@ -114,7 +114,7 @@ best_geneset <- c("FAXDC2", "STRADB", "KLHL2", "PRDM2", "AGL", "OSBPL8", "ITPRID
 best_geneset <- c("FAXDC2", "MYO5A", "STRADB", "KLHL2", "MOB1B", "PRDM2", "EXTL2", "MAPK1", "FAM162B", "PPP3CB") # 0.6 split.
 
 best_geneset <- c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", "MAGEA9", "SPEF1", "TERT", "WDR74") # 5-fold validation tmm winner.
-best_geneset <- c("ACADM", "EIF4G3", "EPS8L1", "FAXCD2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2") # 5-fold validation no_tmm winner.
+best_geneset <- c("ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2") # 5-fold validation no_tmm winner.
 
 
 
@@ -364,7 +364,7 @@ best_geneset2 <- c("FAXDC2", "STRADB", "KLHL2", "PRDM2", "AGL", "OSBPL8", "ITPRI
 best_geneset <- c("FAXDC2", "MYO5A", "STRADB", "KLHL2", "MOB1B", "PRDM2", "EXTL2", "MAPK1", "FAM162B", "PPP3CB") # 0.6 split.
 
 best_geneset1 <- c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", "MAGEA9", "SPEF1", "TERT", "WDR74") # 5-fold validation tmm winner.
-best_geneset2 <- c("ACADM", "EIF4G3", "EPS8L1", "FAXCD2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2") # 5-fold validation no_tmm winner.
+best_geneset2 <- c("ACADM", "EIF4G3", "EPS8L1", "FAXDCD2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2") # 5-fold validation no_tmm winner.
 
 
 res <- evaluate_gsva_classifier(expr_train = lcpm_train, 

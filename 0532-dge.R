@@ -200,8 +200,7 @@ regression_results_ALT_sig <- regression_results_ALT %>%
 regression_results_ALT_sig <- regression_results_ALT_sig %>%
   arrange(desc(R.Squared))
 
-write.table(regression_results_ALT_sig, file = "0532-ALT.tsv", 
-            sep = '\t', quote = FALSE, row.names = TRUE)
+
 
 
 ### Now, turn for Telomerase.
@@ -262,7 +261,6 @@ regression_results_Telomerase_sig <- regression_results_Telomerase %>%
 regression_results_Telomerase_sig <- regression_results_Telomerase_sig %>%
   arrange(desc(R.Squared))
 
-write.table(regression_results_Telomerase_sig, file = "0532-Telomerase.tsv", 
-            sep = '\t', quote = FALSE, row.names = TRUE)
+
 
 
