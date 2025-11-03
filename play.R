@@ -467,6 +467,56 @@ cor_results_tmmUpregulated_extend[cor_results_tmmUpregulated_extend$Gene %in% c(
 
 #######################
 
+## correlation matrix of all genes.
+
+library(pheatmap)
+
+t_NBL <- t(lcpm)
+tmmUpregulated_expression <- t_NBL[, colnames(t_NBL) %in%  c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", 
+                                                             "MAGEA9", "SPEF1", "TERT", "WDR74"), drop = FALSE]
+notmmUpregulated_expression <- t_NBL[, colnames(t_NBL) %in%  c("ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", 
+                                                               "HOXC9", "ITPRID2", "MMP16", "PRDM2") , drop = FALSE]
+
+cor_matrix <- cor(notmmUpregulated_expression, method = "pearson")
+cor_matrix <- as.matrix(cor_matrix)
+
+pheatmap(cor_matrix,
+         color = colorRampPalette(c("blue", "white", "red"))(50),
+         display_numbers = TRUE,
+         fontsize = 15,
+         clustering_distance_rows = "euclidean",
+         clustering_distance_cols = "euclidean",
+         clustering_method = "average")
+
+alt_samples <- metadata_combined$SampleID[metadata_combined$TMM == "ALT"]
+tel_samples <- metadata_combined$SampleID[metadata_combined$TMM == "Telomerase"]
+notmm_samples <- metadata_combined$SampleID[metadata_combined$TMM == "NO_TMM"]
+
+cor_alt <- cor((tmmUpregulated_expression[alt_samples, ]), method = "pearson")
+cor_tel <- cor((tmmUpregulated_expression[tel_samples, ]), method = "pearson")
+cor_noTMM <- cor((tmmUpregulated_expression[notmm_samples, ]), method = "pearson")
+
+pheatmap(cor_noTMM,
+         color = colorRampPalette(c("blue", "white", "red"))(50),
+         display_numbers = TRUE,
+         fontsize = 15,
+         clustering_distance_rows = "euclidean",
+         clustering_distance_cols = "euclidean",
+         clustering_method = "average")
+
+
+library(igraph)
+
+edges <- which(cor_matrix > 0.5, arr.ind = TRUE)
+edge_list <- data.frame(
+  gene1 = rownames(cor_matrix)[edges[,1]],
+  gene2 = colnames(cor_matrix)[edges[,2]],
+  weight = cor_matrix[edges]
+)
+graph <- graph_from_data_frame(edge_list, directed = FALSE)
+plot(graph, vertex.size = 20, vertex.label.cex = 1)
+
+
 
 
 
