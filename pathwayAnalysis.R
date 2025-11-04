@@ -1,13 +1,16 @@
-##### clusterProfiler.
-
 library(clusterProfiler)
 library(org.Hs.eg.db)
 library(ReactomePA)
 library(enrichplot)
+library(GSVA)
+library(ComplexHeatmap)
+library(circlize)
 
 
 best_geneset <- c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", "MAGEA9", "SPEF1", "TERT", "WDR74") # 5-fold validation tmm winner.
 best_geneset2 <- c("ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2") # 5-fold validation no_tmm winner.
+best_geneset3 <- c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", "MAGEA9", "SPEF1", "TERT", "WDR74",
+                   "ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2") # together.
 
 # noTMM upregulated gene.
 gene_map <- bitr(candidates_notmm_upregulated_combined$Gene,
@@ -38,6 +41,8 @@ go <- groupGO(gene = gene_map$ENTREZID,
 goTMMUp <- go@result %>%
   filter(Count > 0)
 
+##################################################################
+
 
 # signature -- TMM upregulated.
 gene_map <- bitr(best_geneset,
@@ -48,18 +53,11 @@ gene_map <- bitr(best_geneset,
 go <- groupGO(gene = gene_map$ENTREZID,
               OrgDb = org.Hs.eg.db,
               ont = "BP",
-              level = 5,
+              level = 7,
               readable = TRUE)
 goTMMUpSignature <- go@result %>%
-  filter(Count > 0)
+  filter(Count > 1)
 
-go <- groupGO(gene = gene_map$ENTREZID,
-              OrgDb = org.Hs.eg.db,
-              ont = "BP",
-              level = 6,
-              readable = TRUE)
-goTMMUpSignature <- go@result %>%
-  filter(Count > 0)
 
 
 
@@ -72,29 +70,14 @@ gene_map <- bitr(best_geneset2,
 go <- groupGO(gene = gene_map$ENTREZID,
               OrgDb = org.Hs.eg.db,
               ont = "BP",
-              level = 5,
+              level = 7,
               readable = TRUE)
 
 goNoTMMUpSignature <- go@result %>%
-  filter(Count > 0)
-
-go <- groupGO(gene = gene_map$ENTREZID,
-              OrgDb = org.Hs.eg.db,
-              ont = "BP",
-              level = 6,
-              readable = TRUE)
-goNoTMMUpSignature <- go@result %>%
-  filter(Count > 0)
-
-
-
-
-
+  filter(Count > 1)
 
 
 ###############
-
-
 
 
 # calculating correlation with known biological pathway scores (cell cycle, DNA replication, telomere maintenance).
@@ -103,40 +86,146 @@ library(msigdbr)
 hallmark <- msigdbr(species = "Homo sapiens", category = "H")
 hallmark_list <- split(hallmark$gene_symbol, hallmark$gs_name)
 
-bio_pathways <- hallmark_list[c("HALLMARK_G2M_CHECKPOINT",
-                                "HALLMARK_E2F_TARGETS",
-                                "HALLMARK_DNA_REPAIR",
-                                "HALLMARK_TELOMERE_MAINTENANCE",
-                                "HALLMARK_MITOTIC_SPINDLE")]
+bio_pathways <- hallmark_list[c(
+  # DNA repair / genome stability.
+  "HALLMARK_DNA_REPAIR",
+  "HALLMARK_G2M_CHECKPOINT",
+  "HALLMARK_MITOTIC_SPINDLE",
+  "HALLMARK_P53_PATHWAY",
+  "HALLMARK_APOPTOSIS",
+  
+  # Telomerase / proliferative signaling.
+  "HALLMARK_E2F_TARGETS",
+  "HALLMARK_MYC_TARGETS_V1",
+  "HALLMARK_MYC_TARGETS_V2",
+  "HALLMARK_MTORC1_SIGNALING",
+  "HALLMARK_OXIDATIVE_PHOSPHORYLATION",
+  "HALLMARK_GLYCOLYSIS",
+  
+  # Chromatin / plasticity
+  "HALLMARK_EPITHELIAL_MESENCHYMAL_TRANSITION",
+  "HALLMARK_TGF_BETA_SIGNALING",
+  
+  # Stress / senescence
+  "HALLMARK_REACTIVE_OXYGEN_SPECIES_PATHWAY",
+  "HALLMARK_HYPOXIA",
+  "HALLMARK_INFLAMMATORY_RESPONSE"
+)]
+
 
 param <- gsvaParam(as.matrix(lcpm),
-                     list(bio_pathways),
+                     bio_pathways,
                       kcdf = "Gaussian")
 
+gsva_results <- gsva(param)
+
+# for sample alignment.
+signature_scores <- lcpm[rownames(lcpm) %in% best_geneset3, ]
+gsva_results <- gsva_results[, colnames(signature_scores), drop = FALSE]
 
 
+cor_matrix <- matrix(NA, nrow = nrow(signature_scores), ncol = nrow(gsva_results),
+                     dimnames = list(rownames(signature_scores), rownames(gsva_results)))
 
-gsva_results <- gsva(param, verbose = TRUE)
+pval_matrix <- cor_matrix
 
-# quantify functional relatedness between the genes based on GO semantic similarity.
-library(GOSemSim)
+for (g in rownames(signature_scores)) {
+  for (p in rownames(gsva_results)) {
+    test <- cor.test(as.numeric(signature_scores[g, ]), as.numeric(gsva_results[p, ]),
+                     method = "spearman")
+    cor_matrix[g, p] <- test$estimate
+    pval_matrix[g, p] <- test$p.value
+  }
+}
+
+# Adjust p-values for multiple testing (optional, per gene or overall)
+pval_matrix_adj <- apply(pval_matrix, 1, p.adjust, method = "fdr")
+
+sig_labels <- ifelse(pval_matrix_adj < 0.01, "*", "")
+sig_labels <- t(sig_labels)
+
+row_order <- c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", "MAGEA9", "SPEF1", "TERT", "WDR74",
+                  "ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2")
+column_order <- c("HALLMARK_DNA_REPAIR", "HALLMARK_G2M_CHECKPOINT", "HALLMARK_MITOTIC_SPINDLE",
+                  "HALLMARK_P53_PATHWAY", "HALLMARK_APOPTOSIS", "HALLMARK_E2F_TARGETS",
+                  "HALLMARK_MYC_TARGETS_V1", "HALLMARK_MYC_TARGETS_V2", "HALLMARK_MTORC1_SIGNALING",
+                  "HALLMARK_OXIDATIVE_PHOSPHORYLATION", "HALLMARK_GLYCOLYSIS",
+                  "HALLMARK_EPITHELIAL_MESENCHYMAL_TRANSITION", "HALLMARK_TGF_BETA_SIGNALING",
+                  "HALLMARK_REACTIVE_OXYGEN_SPECIES_PATHWAY", "HALLMARK_HYPOXIA",
+                  "HALLMARK_INFLAMMATORY_RESPONSE")
+
+cor_matrix <- cor_matrix[row_order, column_order]
+
+col_categories <- c(
+  "HALLMARK_DNA_REPAIR"                      = "DNA Repair",
+  "HALLMARK_G2M_CHECKPOINT"                  = "DNA Repair",
+  "HALLMARK_MITOTIC_SPINDLE"                 = "DNA Repair",
+  "HALLMARK_P53_PATHWAY"                     = "Apoptosis",
+  "HALLMARK_APOPTOSIS"                       = "Apoptosis",
+  
+  "HALLMARK_E2F_TARGETS"                     = "Proliferative Signaling",
+  "HALLMARK_MYC_TARGETS_V1"                  = "Proliferative Signaling",
+  "HALLMARK_MYC_TARGETS_V2"                  = "Proliferative Signaling",
+  "HALLMARK_MTORC1_SIGNALING"                = "Proliferative Signaling",
+  "HALLMARK_OXIDATIVE_PHOSPHORYLATION"       = "Proliferative Signaling",
+  "HALLMARK_GLYCOLYSIS"                      = "Proliferative Signaling",
+  
+  "HALLMARK_EPITHELIAL_MESENCHYMAL_TRANSITION" = "Chromatin / Plasticity",
+  "HALLMARK_TGF_BETA_SIGNALING"                = "Chromatin / Plasticity",
+  
+  "HALLMARK_REACTIVE_OXYGEN_SPECIES_PATHWAY" = "Stress / Inflammation",
+  "HALLMARK_HYPOXIA"                         = "Stress / Inflammation",
+  "HALLMARK_INFLAMMATORY_RESPONSE"           = "Stress / Inflammation"
+)
+
+# column split.
+col_split <- factor(col_categories[column_order],
+                    levels = c("DNA Repair",
+                               "Apoptosis",
+                               "Proliferative Signaling",
+                               "Chromatin / Plasticity",
+                               "Stress / Inflammation"))
+
+# row split.
+tmm_up <- c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", "MAGEA9", "SPEF1", "TERT", "WDR74")
+notmm_up <- c("ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2")
+
+row_group <- ifelse(rownames(cor_matrix) %in% tmm_up, "TMM-upregulated", "NO_TMM-upregulated")
+row_split <- factor(row_group, levels = c("TMM-upregulated", "NO_TMM-upregulated"))
+
+col_fun <- colorRamp2(c(-1, 0, 1), c("blue", "white", "red"))
 
 
-# Convert gene symbols to Entrez IDs
-gene_ids <- bitr(best_geneset2, fromType = "SYMBOL",
-                 toType = "ENTREZID", OrgDb = org.Hs.eg.db)$ENTREZID
+# significance table (adj pvalue < 0.01.)
+sig_labels <- sig_labels[row_order, column_order, drop = FALSE]
 
-# Compute semantic similarity matrix for Biological Process (BP)
-sim_matrix <- mgeneSim(gene_ids, semData = godata("org.Hs.eg.db", ont = "BP"), measure = "Wang")
+# final ComplexHeatmap.
+pdf("TMM_correlation_heatmap.pdf", width = 14, height = 8)
+ht <- Heatmap(cor_matrix,
+        col = col_fun,
+        cluster_rows = FALSE,
+        cluster_columns = FALSE,
+        column_split = col_split,
+        row_split = row_split,
+        column_names_rot = 45,
+        row_names_side = "left",
+        top_annotation = HeatmapAnnotation(Category = col_split),
+        cell_fun = function(j, i, x, y, width, height, fill) {
+          if (sig_labels[i, j] == "*") {
+            grid.text("*", x, y, gp = gpar(fontsize = 12, col = "black"))
+          }
+        },
+        column_title = "Hallmark Pathways",
+        row_title = "Gene Signatures",
+        heatmap_legend_param = list(title = "Spearman Correlation",
+                                    title_gp = gpar(fontsize = 10, fontface = "bold"),
+                                    labels_gp = gpar(fontsize = 9)))
 
-gene_map <- bitr(gene_ids, fromType = "ENTREZID", toType = "SYMBOL", OrgDb = org.Hs.eg.db)
+draw(ht, padding = unit(c(5, 10, 10, 10), "mm"))   
+dev.off()
 
-# Replace row/column names
-rownames(sim_matrix) <- gene_map$SYMBOL[match(rownames(sim_matrix), gene_map$ENTREZID)]
-colnames(sim_matrix) <- gene_map$SYMBOL[match(colnames(sim_matrix), gene_map$ENTREZID)]
 
-# Cluster and visualize
-heatmap(sim_matrix)
-mean(sim_matrix[upper.tri(sim_matrix)])
+################################################################################################################
+
 
 
