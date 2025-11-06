@@ -1181,26 +1181,43 @@ tmm_upregulated_kfold <- run_kfold_auc(expr_matrix = lcpm, metadata = metadata_c
                                        max_genes = 20, k = 5,
                                        pivot_gene = "WDR74")
 
+tmm_upregulated_kfold <- run_kfold_auc(expr_matrix = lcpm, metadata = metadata_combined, candidate_genes = a, #using only the intersections.
+                                       phenotype_col = "TMM_Case", label_one = "TMM", label_two = "NO_TMM",
+                                       max_genes = 20, k = 5,
+                                       pivot_gene = "WDR74")
+
 notmm_upregulated_kfold <- run_kfold_auc(expr_matrix = lcpm, metadata = metadata_combined, candidate_genes = candidates_notmm_upregulated_combined$Gene,
                                          phenotype_col = "TMM_Case", label_one = "NO_TMM", label_two = "TMM",
                                          max_genes = 20, k = 5,
                                          pivot_gene = "FAXDC2")
+
+notmm_upregulated_kfold <- run_kfold_auc(expr_matrix = lcpm, metadata = metadata_combined, candidate_genes = b, #using only the intersections.
+                                         phenotype_col = "TMM_Case", label_one = "NO_TMM", label_two = "TMM",
+                                         max_genes = 20, k = 5,
+                                         pivot_gene = "FAXDC2")
+
 
 ## genes present in at least three of the five folds -- for tmm upregulated genes.
 all_genes <- unlist(lapply(tmm_upregulated_kfold$fold_results, function(x) x$selected_genes))
 gene_counts <- table(all_genes)
 
 kfold_tmm_upregulated_genes <- names(gene_counts[gene_counts >= 3])
+# kfold_tmm_upregulated_genes <- names(gene_counts[gene_counts >= 3])
+
 
 
 ## genes present in at least three of the five folds --  for no_tmm upregulated genes.
 all_genes <- unlist(lapply(notmm_upregulated_kfold$fold_results, function(x) x$selected_genes))
 gene_counts <- table(all_genes)
 
+# kfold_notmm_upregulated_genes <- names(gene_counts[gene_counts >= 3])
 kfold_notmm_upregulated_genes <- names(gene_counts[gene_counts >= 3])
 
-candidate_genes <- list(TMM = c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", "MAGEA9", "SPEF1", "TERT", "WDR74"))
-candidate_genes2 <- list(TMM = c("ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2"))
+candidate_genes2 <- list(TMM = c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", "MAGEA9", "SPEF1", "TERT", "WDR74"))
+candidate_genes <- list(TMM = c("ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2"))
+
+candidate_genes2 <- list(TMM = c("LCN15", "TPGS1", "TSEN54", "WDR74")) #up in TMM.
+candidate_genes <- list(TMM = c("ACADM", "CALM2", "CPNE3", "FAXDC2", "GLS", "HECW2", "IGSF10", "KIF13A", "KIFAP3")) #up in NO_TMM.
 
 # upregulated in NO_TMM.
 gsvapar <- gsvaParam(as.matrix(lcpm), candidate_genes, kcdf = "Gaussian")
@@ -1540,7 +1557,7 @@ ggplot(gsva_long, aes(x = TMM_Category, y = GSVA_Score, fill = TMM_Category, col
 
 
 ## incorporating both GSVAs.
-gsvapar <- gsvaParam(as.matrix(lcpm), candidate_genes, kcdf = "Gaussian")
+gsvapar <- gsvaParam(as.matrix(lcpm), candidate_genes2, kcdf = "Gaussian")
 gsva_result <- gsva(gsvapar)
 gsva_result <- as.data.frame(gsva_result)
 rownames(gsva_result) <- NULL
@@ -1550,7 +1567,7 @@ gsva_long <- gsva_result %>%
                values_to = "GSVA_Score_down"
   )
 
-gsvapar2 <- gsvaParam(as.matrix(lcpm), candidate_genes2, kcdf = "Gaussian")
+gsvapar2 <- gsvaParam(as.matrix(lcpm), candidate_genes, kcdf = "Gaussian")
 gsva_result2 <- gsva(gsvapar2)
 gsva_result2 <- as.data.frame(gsva_result2)
 rownames(gsva_result2) <- NULL
@@ -1590,7 +1607,7 @@ ggplot(gsva_long, aes(x = TMM, y = GSVA_Score, fill = TMM, color = TMM)) +
 
 
 ## doing for target.
-gsvapar <- gsvaParam(as.matrix(tmm_lcpm_target), candidate_genes, kcdf = "Gaussian")
+gsvapar <- gsvaParam(as.matrix(tmm_lcpm_target), candidate_genes2, kcdf = "Gaussian")
 gsva_result <- gsva(gsvapar)
 gsva_result <- as.data.frame(gsva_result)
 rownames(gsva_result) <- NULL
@@ -1600,7 +1617,7 @@ gsva_long <- gsva_result %>%
                values_to = "GSVA_Score_down"
   )
 
-gsvapar2 <- gsvaParam(as.matrix(tmm_lcpm_target), candidate_genes2, kcdf = "Gaussian")
+gsvapar2 <- gsvaParam(as.matrix(tmm_lcpm_target), candidate_genes, kcdf = "Gaussian")
 gsva_result2 <- gsva(gsvapar2)
 gsva_result2 <- as.data.frame(gsva_result2)
 rownames(gsva_result2) <- NULL
@@ -1640,7 +1657,7 @@ ggplot(gsva_long, aes(x = TMM, y = GSVA_Score, fill = TMM, color = TMM)) +
 
 ### doing the same for 0532 data.
 
-gsvapar <- gsvaParam(as.matrix(tmm_lcpm), candidate_genes, kcdf = "Gaussian")
+gsvapar <- gsvaParam(as.matrix(tmm_lcpm), candidate_genes2, kcdf = "Gaussian")
 gsva_result <- gsva(gsvapar)
 gsva_result <- as.data.frame(gsva_result)
 rownames(gsva_result) <- NULL
@@ -1650,7 +1667,7 @@ gsva_long <- gsva_result %>%
                values_to = "GSVA_Score_down"
   )
 
-gsvapar2 <- gsvaParam(as.matrix(tmm_lcpm), candidate_genes2, kcdf = "Gaussian")
+gsvapar2 <- gsvaParam(as.matrix(tmm_lcpm), candidate_genes, kcdf = "Gaussian")
 gsva_result2 <- gsva(gsvapar2)
 gsva_result2 <- as.data.frame(gsva_result2)
 rownames(gsva_result2) <- NULL
@@ -1721,7 +1738,7 @@ ackerman_metadata <- ackerman_metadata %>%
 ackerman_NB <- ackerman_NB[, match(ackerman_metadata$SampleID, colnames(ackerman_NB))]
 
 # genes positively upregulated in TMM.
-gsvapar <- gsvaParam(as.matrix(ackerman_NB), candidate_genes, kcdf = "Gaussian")
+gsvapar <- gsvaParam(as.matrix(ackerman_NB), candidate_genes2, kcdf = "Gaussian")
 gsva_result <- gsva(gsvapar)
 gsva_result <- as.data.frame(gsva_result)
 rownames(gsva_result) <- NULL
@@ -1734,7 +1751,7 @@ gsva_long <- gsva_result %>%
   )
 
 # genes positively upregulated in NO_TMM.
-gsvapar2 <- gsvaParam(as.matrix(ackerman_NB), candidate_genes2, kcdf = "Gaussian")
+gsvapar2 <- gsvaParam(as.matrix(ackerman_NB), candidate_genes, kcdf = "Gaussian")
 gsva_result2 <- gsva(gsvapar2)
 gsva_result2 <- as.data.frame(gsva_result2)
 rownames(gsva_result2) <- NULL

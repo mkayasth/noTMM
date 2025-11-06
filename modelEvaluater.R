@@ -116,8 +116,6 @@ best_geneset <- c("FAXDC2", "MYO5A", "STRADB", "KLHL2", "MOB1B", "PRDM2", "EXTL2
 best_geneset <- c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", "MAGEA9", "SPEF1", "TERT", "WDR74") # 5-fold validation tmm winner.
 best_geneset <- c("ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2") # 5-fold validation no_tmm winner.
 
-
-
 res <- evaluate_gsva_classifier(
   expr_train = lcpm_train,
   expr_test = lcpm_test,
@@ -343,7 +341,7 @@ evaluate_gsva_classifier <- function(expr_train, expr_test,
 set.seed(123)
 lcpm <- lcpm[, match(metadata_combined$SampleID, colnames(lcpm))]
 metadata_combined$Strata <- interaction(metadata_combined$TMM, metadata_combined$Cohort, drop = TRUE)
-train_idx <- createDataPartition(metadata_combined$Cohort, p = 0.7, list = FALSE)
+train_idx <- createDataPartition(metadata_combined$Cohort, p = 0.8, list = FALSE)
 
 lcpm_train <- lcpm[, train_idx, drop = FALSE]
 lcpm_test <- lcpm[, -train_idx, drop = FALSE]
@@ -366,6 +364,8 @@ best_geneset <- c("FAXDC2", "MYO5A", "STRADB", "KLHL2", "MOB1B", "PRDM2", "EXTL2
 best_geneset1 <- c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", "MAGEA9", "SPEF1", "TERT", "WDR74") # 5-fold validation tmm winner.
 best_geneset2 <- c("ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2") # 5-fold validation no_tmm winner.
 
+best_geneset1 <- c("LCN15", "TPGS1", "TSEN54", "WDR74")
+best_geneset2 <- c("ACADM", "CALM2", "CPNE3", "FAXDC2", "GLS", "HECW2", "IGSF10", "KIF13A", "KIFAP3")
 
 res <- evaluate_gsva_classifier(expr_train = lcpm_train, 
                                 expr_test = lcpm_test,

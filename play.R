@@ -8,11 +8,14 @@ library(ggpubr)
 candidate_genes <- c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", "MAGEA9", "SPEF1", "TERT", "WDR74")
 candidate_genes <- c("ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2")
 
+candidate_genes <- c("LCN15", "TPGS1", "TSEN54", "WDR74") #up in TMM.
+candidate_genes <- c("ACADM", "CALM2", "CPNE3", "FAXDC2", "GLS", "HECW2", "IGSF10", "KIF13A", "KIFAP3") #up in no_tmm.
+
 # layout for subplots.
 num_genes <- length(candidate_genes)
 
 # Saving the plot as a PDF.
-pdf("rna-seq-regression_results_TMMdown.pdf", width = 4, height = 4)
+pdf("rna-seq-regression_results_TMMup.pdf", width = 4, height = 4)
 
 regression_test_candidates <- lcpm[rownames(lcpm) %in% candidate_genes, ]
 regression_test_candidates <- regression_test_candidates[, match(metadata_combined$SampleID, colnames(regression_test_candidates))]
@@ -44,16 +47,16 @@ for (gene in rownames(regression_test_candidates)) {
     labs(title = gene, x = "Class", y = "Expression") +
     theme(
       axis.text.x = element_text(vjust = 1, hjust = 1),
-      axis.title = element_text(size = 6),
-      axis.text = element_text(size = 6, face = "bold"),
+      axis.title = element_text(size = 12),
+      axis.text = element_text(size = 12, face = "bold"),
       legend.position = "none"
     ) +
     annotate("text", label = r2_label, y = max(plot_data$gene_Expression, na.rm = TRUE) * 1.05, x = 2,
-             hjust = 0, size = 4) +
+             hjust = 0, size = 7) +
     stat_compare_means(comparisons = list(c("Telomerase","NO_TMM")), method= "t.test",
-                       method.args = list(alternative ="two.sided"), size = 4, tip.length = 0.01, label.y = max(plot_data$gene_Expression, na.rm = TRUE) * 0.75) +
+                       method.args = list(alternative ="two.sided"), size = 6, tip.length = 0.01, label.y = max(plot_data$gene_Expression, na.rm = TRUE) * 0.75) +
     stat_compare_means(comparisons = list(c("ALT","NO_TMM")), method= "t.test",
-                       method.args = list(alternative ="two.sided"), size = 4, tip.length = 0.01, label.y = max(plot_data$gene_Expression, na.rm = TRUE) * 0.90)
+                       method.args = list(alternative ="two.sided"), size = 6, tip.length = 0.01, label.y = max(plot_data$gene_Expression, na.rm = TRUE) * 0.90)
   
   print(p)
   
@@ -164,6 +167,10 @@ tert_correlated_genes_notmmUpregulated <- cor_results_notmmUpregulated %>%
 cor_results_notmmUpregulated[cor_results_notmmUpregulated$Gene %in% c("ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2") , ]
 cor_results_tmmUpregulated[cor_results_tmmUpregulated$Gene %in% c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", "MAGEA9", "SPEF1", "TERT", "WDR74"), ]
 
+cor_results_notmmUpregulated[cor_results_notmmUpregulated$Gene %in% c("ACADM", "CALM2", "CPNE3", "FAXDC2", "GLS", 
+                                                                      "HECW2", "IGSF10", "KIF13A", "KIFAP3") , ]
+cor_results_tmmUpregulated[cor_results_tmmUpregulated$Gene %in% c("LCN15", "TPGS1", "TSEN54", "WDR74") , ]
+
 ###########################################################################################################################
 
 ### correlation with extend score.
@@ -270,6 +277,9 @@ extend_correlated_genes_notmmUpregulated <- cor_results_notmmUpregulated_extend 
 cor_results_notmmUpregulated_extend[cor_results_notmmUpregulated_extend$Gene %in% c("ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2") , ]
 cor_results_tmmUpregulated_extend[cor_results_tmmUpregulated_extend$Gene %in% c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", "MAGEA9", "SPEF1", "TERT", "WDR74"), ]
 
+cor_results_notmmUpregulated_extend[cor_results_notmmUpregulated_extend$Gene %in% c("ACADM", "CALM2", "CPNE3", "FAXDC2", "GLS", "HECW2", "IGSF10", "KIF13A", "KIFAP3") , ]
+cor_results_tmmUpregulated_extend[cor_results_tmmUpregulated_extend$Gene %in% c("LCN15", "TPGS1", "TSEN54", "WDR74"), ]
+
 ##################################
 
 ######################################################################################################
@@ -361,6 +371,9 @@ tert_correlated_genes_notmmUpregulated <- cor_results_notmmUpregulated %>%
 
 cor_results_notmmUpregulated[cor_results_notmmUpregulated$Gene %in% c("ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2") , ]
 cor_results_tmmUpregulated[cor_results_tmmUpregulated$Gene %in% c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", "MAGEA9", "SPEF1", "TERT", "WDR74"), ]
+
+cor_results_notmmUpregulated[cor_results_notmmUpregulated$Gene %in% c("ACADM", "CALM2", "CPNE3", "FAXDC2", "GLS", "HECW2", "IGSF10", "KIF13A", "KIFAP3") , ]
+cor_results_tmmUpregulated[cor_results_tmmUpregulated$Gene %in% c("LCN15", "TPGS1", "TSEN54", "WDR74"), ]
 
 ##########################
 
@@ -465,11 +478,14 @@ extend_correlated_genes_notmmUpregulated <- cor_results_notmmUpregulated_extend 
 cor_results_notmmUpregulated_extend[cor_results_notmmUpregulated_extend$Gene %in% c("ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2") , ]
 cor_results_tmmUpregulated_extend[cor_results_tmmUpregulated_extend$Gene %in% c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", "MAGEA9", "SPEF1", "TERT", "WDR74"), ]
 
+cor_results_notmmUpregulated[cor_results_notmmUpregulated$Gene %in% c("ACADM", "CALM2", "CPNE3", "FAXDC2", "GLS", "HECW2", "IGSF10", "KIF13A", "KIFAP3") , ]
+cor_results_tmmUpregulated[cor_results_tmmUpregulated$Gene %in% c("LCN15", "TPGS1", "TSEN54", "WDR74"), ]
 #######################
 
 ## correlation matrix of all genes.
 
 library(pheatmap)
+library(Hmisc)
 
 t_NBL <- t(lcpm)
 tmmUpregulated_expression <- t_NBL[, colnames(t_NBL) %in%  c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", 
@@ -477,16 +493,47 @@ tmmUpregulated_expression <- t_NBL[, colnames(t_NBL) %in%  c("ALG1L2", "ALOX12B"
 notmmUpregulated_expression <- t_NBL[, colnames(t_NBL) %in%  c("ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", 
                                                                "HOXC9", "ITPRID2", "MMP16", "PRDM2") , drop = FALSE]
 
-cor_matrix <- cor(tmmUpregulated_expression, method = "pearson")
-cor_matrix <- as.matrix(cor_matrix)
+tmmUpregulated_expression <- t_NBL[, colnames(t_NBL) %in%  c("LCN15", "TPGS1", "TSEN54", "WDR74"), drop = FALSE]
+notmmUpregulated_expression <- t_NBL[, colnames(t_NBL) %in%  c("ACADM", "CALM2", "CPNE3", "FAXDC2", 
+                                                               "GLS", "HECW2", "IGSF10", "KIF13A", "KIFAP3") , drop = FALSE]
+all_expression <- t_NBL[, colnames(t_NBL) %in% c("ACADM", "CALM2", "CPNE3", "FAXDC2", 
+                                                 "GLS", "HECW2", "IGSF10", "KIF13A", "KIFAP3", 
+                                                 "LCN15", "TPGS1", "TSEN54", "WDR74") , drop = FALSE]
 
+
+res <- rcorr(as.matrix(all_expression), type = "pearson")
+
+cor_matrix <- res$r     
+p_matrix <- res$P 
+
+# Creating a matrix of significance marks.
+sig_matrix <- ifelse(p_matrix < 0.001, "***",
+                     ifelse(p_matrix < 0.01, "**",
+                            ifelse(p_matrix < 0.05, "*", "")))
+sig_matrix[is.na(sig_matrix)] <- ""
+
+# formatting label.
+combined_labels <- matrix(
+  paste0(sprintf("%.2f", cor_matrix), "\n", sig_matrix),
+  nrow = nrow(cor_matrix),
+  dimnames = dimnames(cor_matrix)
+)
+
+# heatmap.
 pheatmap(cor_matrix,
          color = colorRampPalette(c("blue", "white", "red"))(50),
-         display_numbers = TRUE,
+         display_numbers = combined_labels,  # showing significance stars + correlation value.
+         number_color = "black",
+         fontsize_number = 12,
          fontsize = 13,
          clustering_distance_rows = "euclidean",
          clustering_distance_cols = "euclidean",
          clustering_method = "average")
+
+grid::grid.text("* p < 0.05, ** p < 0.01, *** p < 0.001",
+                x = 0.86, y = 0.95, gp = grid::gpar(fontsize = 11))
+
+
 
 alt_samples <- metadata_combined$SampleID[metadata_combined$TMM == "ALT"]
 tel_samples <- metadata_combined$SampleID[metadata_combined$TMM == "Telomerase"]
