@@ -92,29 +92,46 @@ hallmark <- msigdbr(species = "Homo sapiens", category = "H")
 hallmark_list <- split(hallmark$gene_symbol, hallmark$gs_name)
 
 bio_pathways <- hallmark_list[c(
-  # DNA repair / genome stability.
+  # DNA repair pathways.
   "HALLMARK_DNA_REPAIR",
   "HALLMARK_G2M_CHECKPOINT",
-  "HALLMARK_MITOTIC_SPINDLE",
+ 
+  # apoptosis pathways 
   "HALLMARK_P53_PATHWAY",
   "HALLMARK_APOPTOSIS",
   
   # Telomerase / proliferative signaling.
   "HALLMARK_E2F_TARGETS",
+  "HALLMARK_MITOTIC_SPINDLE",
   "HALLMARK_MYC_TARGETS_V1",
   "HALLMARK_MYC_TARGETS_V2",
   "HALLMARK_MTORC1_SIGNALING",
+  "HALLMARK_PI3K_AKT_MTOR_SIGNALING",
   "HALLMARK_OXIDATIVE_PHOSPHORYLATION",
   "HALLMARK_GLYCOLYSIS",
   
-  # Chromatin / plasticity
+  # Cell motility signaling.
   "HALLMARK_EPITHELIAL_MESENCHYMAL_TRANSITION",
   "HALLMARK_TGF_BETA_SIGNALING",
+  "HALLMARK_APICAL_JUNCTION",
+  "HALLMARK_APICAL_SURFACE",
+  #"REACTOME_INTEGRIN_CELL_SURFACE_INTERACTIONS",
+  #"REACTOME_EXTRACELLULAR_MATRIX_ORGANIZATION",
+  #"REACTOME_RHO_GTPASE_CYCLE",
+  #"REACTOME_ANTIGEN_PRESENTATION",
   
-  # Stress / senescence
+  
+  # oxidative and metabolic stress response.
   "HALLMARK_REACTIVE_OXYGEN_SPECIES_PATHWAY",
   "HALLMARK_HYPOXIA",
-  "HALLMARK_INFLAMMATORY_RESPONSE"
+  "HALLMARK_UNFOLDED_PROTEIN_RESPONSE",
+  
+  # inflammatory and cytokine stress.
+  "HALLMARK_TNFA_SIGNALING_VIA_NFKB",
+  "HALLMARK_IL6_JAK_STAT3_SIGNALING",
+  "HALLMARK_INFLAMMATORY_RESPONSE",
+  "HALLMARK_INTERFERON_ALPHA_RESPONSE"
+  
 )]
 
 
@@ -124,81 +141,99 @@ param <- gsvaParam(as.matrix(lcpm),
 
 gsva_results <- gsva(param)
 
-# for sample alignment.
-signature_scores <- lcpm[rownames(lcpm) %in% best_geneset3, ]
-gsva_results <- gsva_results[, colnames(signature_scores), drop = FALSE]
+# doing correlation for all the genes so that adj-p value makes sense.
+pathway_scores <- gsva_results
+pathway_scores <- pathway_scores[, colnames(lcpm), drop = FALSE]
 
-
-cor_matrix <- matrix(NA, nrow = nrow(signature_scores), ncol = nrow(gsva_results),
-                     dimnames = list(rownames(signature_scores), rownames(gsva_results)))
-
+# initializing result matrices.
+cor_matrix <- matrix(NA, nrow = nrow(lcpm), ncol = nrow(pathway_scores),
+                     dimnames = list(rownames(lcpm), rownames(pathway_scores)))
 pval_matrix <- cor_matrix
 
-for (g in rownames(signature_scores)) {
-  for (p in rownames(gsva_results)) {
-    test <- cor.test(as.numeric(signature_scores[g, ]), as.numeric(gsva_results[p, ]),
-                     method = "spearman")
-    cor_matrix[g, p] <- test$estimate
-    pval_matrix[g, p] <- test$p.value
-  }
+# computing correlation.
+for (p in rownames(pathway_scores)) {
+  cor_tests <- apply(lcpm, 1, function(x)
+    cor.test(as.numeric(x), as.numeric(pathway_scores[p, ]), method = "spearman"))
+  
+  cor_matrix[, p] <- sapply(cor_tests, `[[`, "estimate")
+  pval_matrix[, p] <- sapply(cor_tests, `[[`, "p.value")
 }
 
-# Adjust p-values for multiple testing (optional, per gene or overall)
-pval_matrix_adj <- apply(pval_matrix, 1, p.adjust, method = "fdr")
+# adjusting p-values for multiple testing per pathway.
+pval_matrix_adj <- apply(pval_matrix, 2, p.adjust, method = "fdr")
+
+# now just filtering our signature genes.
+cor_matrix <- cor_matrix[rownames(cor_matrix) %in% best_geneset3, ]
+pval_matrix_adj <- pval_matrix_adj[rownames(pval_matrix_adj) %in% best_geneset3, ]
 
 sig_labels <- ifelse(pval_matrix_adj < 0.001, "***",
                      ifelse(pval_matrix_adj < 0.01, "**",
                             ifelse(pval_matrix_adj < 0.05, "*", "")))
 
-sig_labels <- t(sig_labels)
 
-# row_order <- c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", "MAGEA9", "SPEF1", "TERT", "WDR74",
-#                   "ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2")
+
+row_order <- c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", "MAGEA9", "SPEF1", "TERT", "WDR74",
+                  "ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2")
 row_order <- c("LCN15", "TPGS1", "TSEN54", "WDR74",
                "ACADM", "CALM2", "CPNE3", "FAXDC2", "GLS", "HECW2", "IGSF10", "KIF13A", "KIFAP3")
-column_order <- c("HALLMARK_DNA_REPAIR", "HALLMARK_G2M_CHECKPOINT", "HALLMARK_MITOTIC_SPINDLE",
-                  "HALLMARK_P53_PATHWAY", "HALLMARK_APOPTOSIS", "HALLMARK_E2F_TARGETS",
-                  "HALLMARK_MYC_TARGETS_V1", "HALLMARK_MYC_TARGETS_V2", "HALLMARK_MTORC1_SIGNALING",
-                  "HALLMARK_OXIDATIVE_PHOSPHORYLATION", "HALLMARK_GLYCOLYSIS",
-                  "HALLMARK_EPITHELIAL_MESENCHYMAL_TRANSITION", "HALLMARK_TGF_BETA_SIGNALING",
-                  "HALLMARK_REACTIVE_OXYGEN_SPECIES_PATHWAY", "HALLMARK_HYPOXIA",
-                  "HALLMARK_INFLAMMATORY_RESPONSE")
+column_order <- c("HALLMARK_DNA_REPAIR", "HALLMARK_G2M_CHECKPOINT", "HALLMARK_P53_PATHWAY", "HALLMARK_APOPTOSIS", "HALLMARK_E2F_TARGETS", 
+                  "HALLMARK_MITOTIC_SPINDLE","HALLMARK_MYC_TARGETS_V1", "HALLMARK_MYC_TARGETS_V2", 
+                  "HALLMARK_MTORC1_SIGNALING","HALLMARK_PI3K_AKT_MTOR_SIGNALING","HALLMARK_OXIDATIVE_PHOSPHORYLATION",
+                  "HALLMARK_GLYCOLYSIS",
+  "HALLMARK_EPITHELIAL_MESENCHYMAL_TRANSITION", "HALLMARK_TGF_BETA_SIGNALING","HALLMARK_APICAL_JUNCTION",
+  "HALLMARK_APICAL_SURFACE","HALLMARK_REACTIVE_OXYGEN_SPECIES_PATHWAY", "HALLMARK_HYPOXIA",
+  "HALLMARK_UNFOLDED_PROTEIN_RESPONSE", "HALLMARK_TNFA_SIGNALING_VIA_NFKB","HALLMARK_IL6_JAK_STAT3_SIGNALING",
+  "HALLMARK_INFLAMMATORY_RESPONSE","HALLMARK_INTERFERON_ALPHA_RESPONSE")
 
 cor_matrix <- cor_matrix[row_order, column_order]
 
 col_categories <- c(
-  "HALLMARK_DNA_REPAIR"                      = "DNA Repair",
-  "HALLMARK_G2M_CHECKPOINT"                  = "DNA Repair",
-  "HALLMARK_MITOTIC_SPINDLE"                 = "DNA Repair",
-  "HALLMARK_P53_PATHWAY"                     = "Apoptosis",
-  "HALLMARK_APOPTOSIS"                       = "Apoptosis",
-  
-  "HALLMARK_E2F_TARGETS"                     = "Proliferative Signaling",
-  "HALLMARK_MYC_TARGETS_V1"                  = "Proliferative Signaling",
-  "HALLMARK_MYC_TARGETS_V2"                  = "Proliferative Signaling",
-  "HALLMARK_MTORC1_SIGNALING"                = "Proliferative Signaling",
-  "HALLMARK_OXIDATIVE_PHOSPHORYLATION"       = "Proliferative Signaling",
-  "HALLMARK_GLYCOLYSIS"                      = "Proliferative Signaling",
-  
-  "HALLMARK_EPITHELIAL_MESENCHYMAL_TRANSITION" = "Chromatin / Plasticity",
-  "HALLMARK_TGF_BETA_SIGNALING"                = "Chromatin / Plasticity",
-  
-  "HALLMARK_REACTIVE_OXYGEN_SPECIES_PATHWAY" = "Stress / Inflammation",
-  "HALLMARK_HYPOXIA"                         = "Stress / Inflammation",
-  "HALLMARK_INFLAMMATORY_RESPONSE"           = "Stress / Inflammation"
+  "HALLMARK_DNA_REPAIR" = "DNA repair pathways",
+  "HALLMARK_G2M_CHECKPOINT" = "DNA repair pathways",
+  "HALLMARK_P53_PATHWAY" = "Apoptosis",
+  "HALLMARK_APOPTOSIS" = "Apoptosis",
+  "HALLMARK_E2F_TARGETS" = "Proliferative signaling",
+  "HALLMARK_MITOTIC_SPINDLE" = "Proliferative signaling",
+  "HALLMARK_MYC_TARGETS_V1" = "Proliferative signaling",
+  "HALLMARK_MYC_TARGETS_V2"= "Proliferative signaling",
+  "HALLMARK_MTORC1_SIGNALING"= "Proliferative signaling",
+  "HALLMARK_PI3K_AKT_MTOR_SIGNALING"= "Proliferative signaling",
+  "HALLMARK_OXIDATIVE_PHOSPHORYLATION"= "Proliferative signaling",
+  "HALLMARK_GLYCOLYSIS" = "Proliferative signaling",
+  "HALLMARK_EPITHELIAL_MESENCHYMAL_TRANSITION" = "Cell Motility & Plasticity",
+  "HALLMARK_TGF_BETA_SIGNALING" = "Cell Motility & Plasticity",
+  "HALLMARK_APICAL_JUNCTION" = "Cell Motility & Plasticity",
+  "HALLMARK_APICAL_SURFACE" = "Cell Motility & Plasticity",
+  "HALLMARK_REACTIVE_OXYGEN_SPECIES_PATHWAY" = "Oxidative & Metabolic Stress Response",
+  "HALLMARK_HYPOXIA" = "Oxidative & Metabolic Stress Response",
+  "HALLMARK_UNFOLDED_PROTEIN_RESPONSE" = "Oxidative & Metabolic Stress Response",
+  "HALLMARK_TNFA_SIGNALING_VIA_NFKB" = "Inflammatory & Cytokine Response",
+  "HALLMARK_IL6_JAK_STAT3_SIGNALING" = "Inflammatory & Cytokine Response",
+  "HALLMARK_INFLAMMATORY_RESPONSE" = "Inflammatory & Cytokine Response",
+  "HALLMARK_INTERFERON_ALPHA_RESPONSE" = "Inflammatory & Cytokine Response"
 )
 
 # column split.
 col_split <- factor(col_categories[column_order],
-                    levels = c("DNA Repair",
+                    levels = c("DNA repair pathways",
                                "Apoptosis",
-                               "Proliferative Signaling",
-                               "Chromatin / Plasticity",
-                               "Stress / Inflammation"))
+                               "Proliferative signaling",
+                               "Cell Motility & Plasticity",
+                               "Oxidative & Metabolic Stress Response",
+                               "Inflammatory & Cytokine Response"))
+
+category_colors <- c(
+  "DNA repair pathways" = "blue",       
+  "Apoptosis" = "green",                          
+  "Proliferative signaling" = "red",            
+  "Cell Motility & Plasticity" = "yellow",           
+  "Oxidative & Metabolic Stress Response" = "orange",
+  "Inflammatory & Cytokine Response" = "brown"
+)
 
 # row split.
-# tmm_up <- c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", "MAGEA9", "SPEF1", "TERT", "WDR74")
-# notmm_up <- c("ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2")
+tmm_up <- c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", "MAGEA9", "SPEF1", "TERT", "WDR74")
+notmm_up <- c("ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2")
 tmm_up <- c("LCN15", "TPGS1", "TSEN54", "WDR74")
 notmm_up <- c("ACADM", "CALM2", "CPNE3", "FAXDC2", "GLS", "HECW2", "IGSF10", "KIF13A", "KIFAP3")
 
@@ -212,7 +247,7 @@ col_fun <- colorRamp2(c(-1, 0, 1), c("blue", "white", "red"))
 sig_labels <- sig_labels[row_order, column_order, drop = FALSE]
 
 # final ComplexHeatmap.
-pdf("TMM_correlation_heatmap.pdf", width = 14, height = 10)
+pdf("TMM_correlation_heatmap2.pdf", width = 14, height = 10)
 ht <- Heatmap(cor_matrix,
         col = col_fun,
         cluster_rows = TRUE,
@@ -222,8 +257,8 @@ ht <- Heatmap(cor_matrix,
         column_names_rot = 45,
         column_names_gp = gpar(fontsize = 9, fontface = "bold"),
         row_names_side = "left",
-        top_annotation = HeatmapAnnotation(Category = col_split),
-        left_annotation = rowAnnotation(Group = row_split,
+        top_annotation = HeatmapAnnotation(Category = col_split, col = list(Category = category_colors)),
+        left_annotation = rowAnnotation(" " = row_split,
                                         annotation_name_gp = gpar(fontsize = 9, fontface = "bold")),
         cell_fun = function(j, i, x, y, width, height, fill) {
           grid.rect(x = x, y = y, width = width, height = height,
@@ -249,7 +284,7 @@ sig_legend <- Legend(
   title_gp = gpar(fontsize = 10, fontface = "bold")
 )
 
-draw(ht, annotation_legend_list = list(sig_legend), padding = unit(c(5, 10, 10, 10), "mm"))   
+draw(ht, annotation_legend_list = list(sig_legend), merge_legends = TRUE, padding = unit(c(5, 10, 10, 10), "mm"))   
 dev.off()
 
 

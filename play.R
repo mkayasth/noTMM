@@ -500,16 +500,25 @@ all_expression <- t_NBL[, colnames(t_NBL) %in% c("ACADM", "CALM2", "CPNE3", "FAX
                                                  "GLS", "HECW2", "IGSF10", "KIF13A", "KIFAP3", 
                                                  "LCN15", "TPGS1", "TSEN54", "WDR74") , drop = FALSE]
 
-
-res <- rcorr(as.matrix(all_expression), type = "pearson")
+res <- rcorr(as.matrix(t_NBL), type = "pearson")
 
 cor_matrix <- res$r     
-p_matrix <- res$P 
+p_matrix <- res$P
 
+
+# calculating adjusted p-value.
+pval_matrix_adj <- apply(p_matrix, 1, p.adjust, method = "fdr")
+
+## now only taking the signature genes.
+cor_matrix <- cor_matrix[rownames(cor_matrix) %in% colnames(all_expression), colnames(cor_matrix) %in% colnames(all_expression)]
+pval_matrix_adj <- pval_matrix_adj[rownames(pval_matrix_adj) %in% colnames(all_expression), colnames(pval_matrix_adj) %in% colnames(all_expression)]
+
+
+# 
 # Creating a matrix of significance marks.
-sig_matrix <- ifelse(p_matrix < 0.001, "***",
-                     ifelse(p_matrix < 0.01, "**",
-                            ifelse(p_matrix < 0.05, "*", "")))
+sig_matrix <- ifelse(pval_matrix_adj < 0.001, "***",
+                     ifelse(pval_matrix_adj < 0.01, "**",
+                            ifelse(pval_matrix_adj < 0.05, "*", "")))
 sig_matrix[is.na(sig_matrix)] <- ""
 
 # formatting label.
