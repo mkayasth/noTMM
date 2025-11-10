@@ -442,10 +442,10 @@ evaluate_gsva_external <- function(expr_new, metadata_new,
 }
 
 colnames(metadata_0532) <- c("RNASeqID", "TMM", "TMM_Case", "SampleID")
-res2 <- evaluate_gsva_external(expr_new = ackerman_NB_log2, metadata_new = ackerman_metadata,
+res2 <- evaluate_gsva_external(expr_new = lcpm, metadata_new = metadata_combined,
                                geneset_tmmUp = best_geneset1, geneset_tmmDown = best_geneset2,
                                phenotype_col = "TMM_Case",
                                label_one = "NO_TMM", label_two = "TMM",
-                               threshold = 0.7892228,
+                               threshold = 0.5,
                                kcdf = "Gaussian")
 

@@ -72,104 +72,6 @@ dev.off()
 
 #######################################################################################
 
-# Looking at associations with TERT/EXTEND.
-source("noTMM/combinedDataset.R")
-
-candidates_tmm_upregulated_combined 
-candidates_notmm_upregulated_combined 
- 
-# first looking at correlation of TERT ranks with TMM upregulated markers.
-ranked_NBL <- apply(lcpm, 2, function(x) rank(x, ties.method = "average"))
-
-# transpose so samples are rows and genes are columns.
-t_NBL <- t(ranked_NBL)
-t_NBL <- as.data.frame(t_NBL)
-
-# TERT expression.
-tert_expr <- t_NBL$TERT
-
-tmmUpregulated_ranks <- t_NBL[, colnames(t_NBL) %in% candidates_tmm_upregulated_combined$Gene, drop = FALSE]
-tmmUpregulated_ranks <- tmmUpregulated_ranks[match(rownames(t_NBL), rownames(tmmUpregulated_ranks)), ]
-
-# vector to store results.
-cor_values <- numeric(ncol(tmmUpregulated_ranks))
-p_values <- numeric(ncol(tmmUpregulated_ranks))
-
-# Looping through each gene for rank-based Spearman correlation with TERT.
-for (i in seq_along(tmmUpregulated_ranks)) {
-  result <- cor.test(tmmUpregulated_ranks[[i]], tert_expr, method = "spearman")
-  cor_values[i] <- result$estimate
-  p_values[i] <- result$p.value
-}
-
-# result dataframe.
-cor_results_tmmUpregulated <- data.frame(
-  Gene = colnames(tmmUpregulated_ranks),
-  correlation = cor_values,
-  pvalue = p_values
-)
-
-# p-values for calculating FDR.
-cor_results_tmmUpregulated$FDR <- p.adjust(cor_results_tmmUpregulated$pvalue, method = "fdr")
-cor_results_tmmUpregulated <- cor_results_tmmUpregulated %>%
-  arrange(FDR)
-
-# filtering fdr < 0.01.
-tert_correlated_genes_tmmUpregulated <- cor_results_tmmUpregulated %>%
-  filter(FDR <= 0.01) %>%
-  arrange(desc(abs(correlation)))
-
-#############################
-
-# Now, looking at correlation of TERT ranks with NO_TMM upregulated markers.
-ranked_NBL <- apply(lcpm, 2, function(x) rank(x, ties.method = "average"))
-
-# transpose so samples are rows and genes are columns.
-t_NBL <- t(ranked_NBL)
-t_NBL <- as.data.frame(t_NBL)
-
-# TERT expression.
-tert_expr <- t_NBL$TERT
-
-notmmUpregulated_ranks <- t_NBL[, colnames(t_NBL) %in% candidates_notmm_upregulated_combined$Gene, drop = FALSE]
-notmmUpregulated_ranks <- notmmUpregulated_ranks[match(rownames(t_NBL), rownames(notmmUpregulated_ranks)), ]
-
-# vector to store results.
-cor_values <- numeric(ncol(notmmUpregulated_ranks))
-p_values <- numeric(ncol(notmmUpregulated_ranks))
-
-# Looping through each gene for rank-based Spearman correlation with TERT.
-for (i in seq_along(notmmUpregulated_ranks)) {
-  result <- cor.test(notmmUpregulated_ranks[[i]], tert_expr, method = "spearman")
-  cor_values[i] <- result$estimate
-  p_values[i] <- result$p.value
-}
-
-# result dataframe.
-cor_results_notmmUpregulated <- data.frame(
-  Gene = colnames(notmmUpregulated_ranks),
-  correlation = cor_values,
-  pvalue = p_values
-)
-
-# p-values for calculating FDR.
-cor_results_notmmUpregulated$FDR <- p.adjust(cor_results_notmmUpregulated$pvalue, method = "fdr")
-cor_results_notmmUpregulated <- cor_results_notmmUpregulated %>%
-  arrange(FDR)
-
-# filtering fdr < 0.01.
-tert_correlated_genes_notmmUpregulated <- cor_results_notmmUpregulated %>%
-  filter(FDR <= 0.01) %>%
-  arrange(desc(abs(correlation)))
-
-###########################################################################################################################
-
-cor_results_notmmUpregulated[cor_results_notmmUpregulated$Gene %in% c("ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2") , ]
-cor_results_tmmUpregulated[cor_results_tmmUpregulated$Gene %in% c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", "MAGEA9", "SPEF1", "TERT", "WDR74"), ]
-
-cor_results_notmmUpregulated[cor_results_notmmUpregulated$Gene %in% c("ACADM", "CALM2", "CPNE3", "FAXDC2", "GLS", 
-                                                                      "HECW2", "IGSF10", "KIF13A", "KIFAP3") , ]
-cor_results_tmmUpregulated[cor_results_tmmUpregulated$Gene %in% c("LCN15", "TPGS1", "TSEN54", "WDR74") , ]
 
 ###########################################################################################################################
 
@@ -207,279 +109,123 @@ ranked_NBL <- apply(lcpm, 2, function(x) rank(x, ties.method = "average"))
 # transpose so samples are rows and genes are columns.
 t_NBL <- t(ranked_NBL)
 t_NBL <- as.data.frame(t_NBL)
-
-tmmUpregulated_ranks <- t_NBL[, colnames(t_NBL) %in% candidates_tmm_upregulated_combined$Gene, drop = FALSE]
-tmmUpregulated_ranks <- tmmUpregulated_ranks[match(rownames(telomeraseScores), rownames(tmmUpregulated_ranks)), ]
+t_NBL <- t_NBL[match(rownames(telomeraseScores), rownames(t_NBL)), ]
 
 # vector to store results.
-cor_values <- numeric(ncol(tmmUpregulated_ranks))
-p_values <- numeric(ncol(tmmUpregulated_ranks))
+cor_values <- numeric(ncol(t_NBL))
+p_values <- numeric(ncol(t_NBL))
 
 # Looping through each gene for rank-based Spearman correlation with EXTEND.
-for (i in seq_along(tmmUpregulated_ranks)) {
-  result <- cor.test(tmmUpregulated_ranks[[i]], telomeraseScores$NormEXTENDScores, method = "spearman")
+for (i in seq_along(t_NBL)) {
+  result <- cor.test(t_NBL[[i]], telomeraseScores$NormEXTENDScores, method = "spearman")
   cor_values[i] <- result$estimate
   p_values[i] <- result$p.value
 }
 
-# result dataframe.
-cor_results_tmmUpregulated_extend <- data.frame(
-  Gene = colnames(tmmUpregulated_ranks),
+# building result table for all genes for calculating FDR.
+cor_results <- data.frame(
+  Gene = colnames(t_NBL),
   correlation = cor_values,
-  pvalue = p_values
+  p_values = p_values
 )
 
-# p-values for calculating FDR.
-cor_results_tmmUpregulated_extend$FDR <- p.adjust(cor_results_tmmUpregulated_extend$pvalue, method = "fdr")
+# calculating FDR.
+cor_results$FDR <- p.adjust(cor_results$p_values, method = "fdr")
+cor_results <- cor_results %>%
+  arrange(FDR)
+
+# Now extracting only the TMM-upregulated subset.
+cor_results_tmmUpregulated_extend <- cor_results[
+  cor_results$Gene %in% c("LCN15", "TPGS1", "TSEN54", "WDR74"),
+]
 cor_results_tmmUpregulated_extend <- cor_results_tmmUpregulated_extend %>%
   arrange(FDR)
 
-# filtering fdr < 0.01.
-extend_correlated_genes_tmmUpregulated <- cor_results_tmmUpregulated_extend %>%
-  filter(FDR <= 0.01) %>%
-  arrange(desc(abs(correlation)))
+cor_results_tmmUpregulated_extend <- cor_results[
+  cor_results$Gene %in% c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", "MAGEA9", "SPEF1", "TERT", "WDR74"),
+]
+cor_results_tmmUpregulated_extend <- cor_results_tmmUpregulated_extend %>%
+  arrange(FDR)
 
-##### Now, looking at EXTEND correlated genes for NO_TMM upregulated markers.
-notmmUpregulated_ranks <- t_NBL[, colnames(t_NBL) %in% candidates_notmm_upregulated_combined$Gene, drop = FALSE]
-notmmUpregulated_ranks <- notmmUpregulated_ranks[match(rownames(telomeraseScores), rownames(notmmUpregulated_ranks)), ]
 
-# vector to store results.
-cor_values <- numeric(ncol(notmmUpregulated_ranks))
-p_values <- numeric(ncol(notmmUpregulated_ranks))
-
-# Looping through each gene for rank-based Spearman correlation with EXTEND.
-for (i in seq_along(notmmUpregulated_ranks)) {
-  result <- cor.test(notmmUpregulated_ranks[[i]], telomeraseScores$NormEXTENDScores, method = "spearman")
-  cor_values[i] <- result$estimate
-  p_values[i] <- result$p.value
-}
-
-# result dataframe.
-cor_results_notmmUpregulated_extend <- data.frame(
-  Gene = colnames(notmmUpregulated_ranks),
-  correlation = cor_values,
-  pvalue = p_values
-)
-
-# p-values for calculating FDR.
-cor_results_notmmUpregulated_extend$FDR <- p.adjust(cor_results_notmmUpregulated_extend$pvalue, method = "fdr")
+# Now, looking at EXTEND correlated genes for NO_TMM upregulated markers.
+cor_results_notmmUpregulated_extend <- cor_results[
+  cor_results$Gene %in% c("ACADM", "CALM2", "CPNE3", "FAXDC2", "GLS", "HECW2", "IGSF10", "KIF13A", "KIFAP3"),
+]
 cor_results_notmmUpregulated_extend <- cor_results_notmmUpregulated_extend %>%
   arrange(FDR)
 
-# filtering fdr < 0.01.
-extend_correlated_genes_notmmUpregulated <- cor_results_notmmUpregulated_extend %>%
-  filter(FDR <= 0.01) %>%
-  arrange(desc(abs(correlation)))
+cor_results_notmmUpregulated_extend <- cor_results[
+  cor_results$Gene %in% c("ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2"),
+]
+cor_results_notmmUpregulated_extend <- cor_results_notmmUpregulated_extend %>%
+  arrange(FDR)
 
 
-#################################
 
-cor_results_notmmUpregulated_extend[cor_results_notmmUpregulated_extend$Gene %in% c("ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2") , ]
-cor_results_tmmUpregulated_extend[cor_results_tmmUpregulated_extend$Gene %in% c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", "MAGEA9", "SPEF1", "TERT", "WDR74"), ]
 
-cor_results_notmmUpregulated_extend[cor_results_notmmUpregulated_extend$Gene %in% c("ACADM", "CALM2", "CPNE3", "FAXDC2", "GLS", "HECW2", "IGSF10", "KIF13A", "KIFAP3") , ]
-cor_results_tmmUpregulated_extend[cor_results_tmmUpregulated_extend$Gene %in% c("LCN15", "TPGS1", "TSEN54", "WDR74"), ]
-
-##################################
 
 ######################################################################################################
 ######################################################################################################
 
-## Now, instead of ranks: using expression values.
+## Now, instead of ranks: using expression values for TERT.
 
 # transpose so samples are rows and genes are columns.
 t_NBL <- t(lcpm)
 t_NBL <- as.data.frame(t_NBL)
 
-# TERT expression.
-tert_expr <- t_NBL$TERT
-
-tmmUpregulated_ranks <- t_NBL[, colnames(t_NBL) %in% candidates_tmm_upregulated_combined$Gene, drop = FALSE]
-tmmUpregulated_ranks <- tmmUpregulated_ranks[match(rownames(t_NBL), rownames(tmmUpregulated_ranks)), ]
-
 # vector to store results.
-cor_values <- numeric(ncol(tmmUpregulated_ranks))
-p_values <- numeric(ncol(tmmUpregulated_ranks))
+cor_values <- numeric(ncol(t_NBL))
+p_values <- numeric(ncol(t_NBL))
 
-# Looping through each gene for expression-based Spearman correlation with TERT.
-for (i in seq_along(tmmUpregulated_ranks)) {
-  result <- cor.test(tmmUpregulated_ranks[[i]], tert_expr, method = "pearson")
+# Looping through each gene for expression-based Pearson correlation with TERT.
+for (i in seq_along(t_NBL)) {
+  result <- cor.test(t_NBL[[i]], tert_expr, method = "pearson")
   cor_values[i] <- result$estimate
   p_values[i] <- result$p.value
 }
 
-# result dataframe.
-cor_results_tmmUpregulated <- data.frame(
-  Gene = colnames(tmmUpregulated_ranks),
+# building result table for all genes for calculating FDR.
+cor_results <- data.frame(
+  Gene = colnames(t_NBL),
   correlation = cor_values,
-  pvalue = p_values
+  p_values = p_values
 )
 
-# p-values for calculating FDR.
-cor_results_tmmUpregulated$FDR <- p.adjust(cor_results_tmmUpregulated$pvalue, method = "fdr")
-cor_results_tmmUpregulated <- cor_results_tmmUpregulated %>%
+# calculating FDR.
+cor_results$FDR <- p.adjust(cor_results$p_values, method = "fdr")
+cor_results <- cor_results %>%
   arrange(FDR)
 
-# filtering fdr < 0.01.
-tert_correlated_genes_tmmUpregulated <- cor_results_tmmUpregulated %>%
-  filter(FDR <= 0.01) %>%
-  arrange(desc(abs(correlation)))
+# Now extracting only the TMM-upregulated subset.
+cor_results_tmmUpregulated_tert <- cor_results[
+  cor_results$Gene %in% c("LCN15", "TPGS1", "TSEN54", "WDR74"),
+]
+cor_results_tmmUpregulated_tert <- cor_results_tmmUpregulated_tert %>%
+  arrange(FDR)
 
+cor_results_tmmUpregulated_tert <- cor_results[
+  cor_results$Gene %in% c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", "MAGEA9", "SPEF1", "TERT", "WDR74"),
+]
+cor_results_tmmUpregulated_tert <- cor_results_tmmUpregulated_tert %>%
+  arrange(FDR)
+
+
+# Now, looking at TERT correlated genes for NO_TMM upregulated markers.
+cor_results_notmmUpregulated_tert <- cor_results[
+  cor_results$Gene %in% c("ACADM", "CALM2", "CPNE3", "FAXDC2", "GLS", "HECW2", "IGSF10", "KIF13A", "KIFAP3"),
+]
+cor_results_notmmUpregulated_tert <- cor_results_notmmUpregulated_tert %>%
+  arrange(FDR)
+
+cor_results_notmmUpregulated_tert <- cor_results[
+  cor_results$Gene %in% c("ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2"),
+]
+cor_results_notmmUpregulated_tert <- cor_results_notmmUpregulated_tert %>%
+  arrange(FDR)
 #############################
 
-# Now, looking at correlation of TERT expression with NO_TMM upregulated markers.
 
-# transpose so samples are rows and genes are columns.
-t_NBL <- t(ranked_NBL)
-t_NBL <- as.data.frame(t_NBL)
-
-# TERT expression.
-tert_expr <- t_NBL$TERT
-
-notmmUpregulated_ranks <- t_NBL[, colnames(t_NBL) %in% candidates_notmm_upregulated_combined$Gene, drop = FALSE]
-notmmUpregulated_ranks <- notmmUpregulated_ranks[match(rownames(t_NBL), rownames(notmmUpregulated_ranks)), ]
-
-# vector to store results.
-cor_values <- numeric(ncol(notmmUpregulated_ranks))
-p_values <- numeric(ncol(notmmUpregulated_ranks))
-
-# Looping through each gene for rank-based Spearman correlation with TERT.
-for (i in seq_along(notmmUpregulated_ranks)) {
-  result <- cor.test(notmmUpregulated_ranks[[i]], tert_expr, method = "pearson")
-  cor_values[i] <- result$estimate
-  p_values[i] <- result$p.value
-}
-
-# result dataframe.
-cor_results_notmmUpregulated <- data.frame(
-  Gene = colnames(notmmUpregulated_ranks),
-  correlation = cor_values,
-  pvalue = p_values
-)
-
-# p-values for calculating FDR.
-cor_results_notmmUpregulated$FDR <- p.adjust(cor_results_notmmUpregulated$pvalue, method = "fdr")
-cor_results_notmmUpregulated <- cor_results_notmmUpregulated %>%
-  arrange(FDR)
-
-# filtering fdr < 0.01.
-tert_correlated_genes_notmmUpregulated <- cor_results_notmmUpregulated %>%
-  filter(FDR <= 0.01) %>%
-  arrange(desc(abs(correlation)))
-
-###########################
-
-cor_results_notmmUpregulated[cor_results_notmmUpregulated$Gene %in% c("ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2") , ]
-cor_results_tmmUpregulated[cor_results_tmmUpregulated$Gene %in% c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", "MAGEA9", "SPEF1", "TERT", "WDR74"), ]
-
-cor_results_notmmUpregulated[cor_results_notmmUpregulated$Gene %in% c("ACADM", "CALM2", "CPNE3", "FAXDC2", "GLS", "HECW2", "IGSF10", "KIF13A", "KIFAP3") , ]
-cor_results_tmmUpregulated[cor_results_tmmUpregulated$Gene %in% c("LCN15", "TPGS1", "TSEN54", "WDR74"), ]
-
-##########################
-
-
-### correlation of expression values with extend score.
-
-### correlation with expression instead of ranks.
-source("EXTEND/ComponentAndMarkerFunction.r")
-source("EXTEND/ComponentOneAndMarkerFunction.r")
-source("EXTEND/ComponentTwoAndMarkerFunction.r")
-source("EXTEND/InputData.r")
-source("EXTEND/IterativeRS.r")
-source("EXTEND/IterativeRS.r")
-source("EXTEND/MarkerFunction.r")
-source("EXTEND/RunEXTEND.r")
-
-
-extendScores <- RunEXTEND(as.matrix(lcpm))
-telomeraseScores <- read_delim("TelomeraseScores.txt")
-
-telomeraseScores <- telomeraseScores[, c("SampleID", "NormEXTENDScores")]
-telomeraseScores <- telomeraseScores %>%
-  mutate(SampleID = ifelse(grepl("^H", SampleID),
-                           gsub("\\.", "-", SampleID),
-                           SampleID))
-
-telomeraseScores <- left_join(telomeraseScores, metadata_combined[, c("SampleID", "TMM")], by = "SampleID")
-telomeraseScores <- as.data.frame(telomeraseScores)
-rownames(telomeraseScores) <- telomeraseScores$SampleID
-telomeraseScores$SampleID = NULL
-
-# transpose so samples are rows and genes are columns.
-t_NBL <- t(lcpm)
-t_NBL <- as.data.frame(t_NBL)
-
-tmmUpregulated_ranks <- t_NBL[, colnames(t_NBL) %in% candidates_tmm_upregulated_combined$Gene, drop = FALSE]
-tmmUpregulated_ranks <- tmmUpregulated_ranks[match(rownames(telomeraseScores), rownames(tmmUpregulated_ranks)), ]
-
-# vector to store results.
-cor_values <- numeric(ncol(tmmUpregulated_ranks))
-p_values <- numeric(ncol(tmmUpregulated_ranks))
-
-# Looping through each gene for expression-based Pearson correlation with EXTEND.
-for (i in seq_along(tmmUpregulated_ranks)) {
-  result <- cor.test(tmmUpregulated_ranks[[i]], telomeraseScores$NormEXTENDScores, method = "pearson")
-  cor_values[i] <- result$estimate
-  p_values[i] <- result$p.value
-}
-
-# result dataframe.
-cor_results_tmmUpregulated_extend <- data.frame(
-  Gene = colnames(tmmUpregulated_ranks),
-  correlation = cor_values,
-  pvalue = p_values
-)
-
-# p-values for calculating FDR.
-cor_results_tmmUpregulated_extend$FDR <- p.adjust(cor_results_tmmUpregulated_extend$pvalue, method = "fdr")
-cor_results_tmmUpregulated_extend <- cor_results_tmmUpregulated_extend %>%
-  arrange(FDR)
-
-# filtering fdr < 0.01.
-extend_correlated_genes_tmmUpregulated <- cor_results_tmmUpregulated_extend %>%
-  filter(FDR <= 0.01) %>%
-  arrange(desc(abs(correlation)))
-
-##### Now, looking at EXTEND correlated genes for NO_TMM upregulated markers.
-notmmUpregulated_ranks <- t_NBL[, colnames(t_NBL) %in% candidates_notmm_upregulated_combined$Gene, drop = FALSE]
-notmmUpregulated_ranks <- notmmUpregulated_ranks[match(rownames(telomeraseScores), rownames(notmmUpregulated_ranks)), ]
-
-# vector to store results.
-cor_values <- numeric(ncol(notmmUpregulated_ranks))
-p_values <- numeric(ncol(notmmUpregulated_ranks))
-
-# Looping through each gene for expression-based Pearson correlation with EXTEND.
-for (i in seq_along(notmmUpregulated_ranks)) {
-  result <- cor.test(notmmUpregulated_ranks[[i]], telomeraseScores$NormEXTENDScores, method = "pearson")
-  cor_values[i] <- result$estimate
-  p_values[i] <- result$p.value
-}
-
-# result dataframe.
-cor_results_notmmUpregulated_extend <- data.frame(
-  Gene = colnames(notmmUpregulated_ranks),
-  correlation = cor_values,
-  pvalue = p_values
-)
-
-# p-values for calculating FDR.
-cor_results_notmmUpregulated_extend$FDR <- p.adjust(cor_results_notmmUpregulated_extend$pvalue, method = "fdr")
-cor_results_notmmUpregulated_extend <- cor_results_notmmUpregulated_extend %>%
-  arrange(FDR)
-
-# filtering fdr < 0.01.
-extend_correlated_genes_notmmUpregulated <- cor_results_notmmUpregulated_extend %>%
-  filter(FDR <= 0.01) %>%
-  arrange(desc(abs(correlation)))
-
-
-##########################
-
-cor_results_notmmUpregulated_extend[cor_results_notmmUpregulated_extend$Gene %in% c("ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2") , ]
-cor_results_tmmUpregulated_extend[cor_results_tmmUpregulated_extend$Gene %in% c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", "MAGEA9", "SPEF1", "TERT", "WDR74"), ]
-
-cor_results_notmmUpregulated[cor_results_notmmUpregulated$Gene %in% c("ACADM", "CALM2", "CPNE3", "FAXDC2", "GLS", "HECW2", "IGSF10", "KIF13A", "KIFAP3") , ]
-cor_results_tmmUpregulated[cor_results_tmmUpregulated$Gene %in% c("LCN15", "TPGS1", "TSEN54", "WDR74"), ]
 #######################
 
 ## correlation matrix of all genes.
@@ -562,7 +308,102 @@ pheatmap(cor_tel,
 
 
 
+#######################################################################################
 
+## for TARGET, looking at the correlation of telomere content vs. TMM.
+
+t_NBL <- t(tmm_lcpm_target)
+
+tmmUpregulated_expression <- t_NBL[, colnames(t_NBL) %in%  c("LCN15", "TPGS1", "TSEN54", "WDR74"), drop = FALSE]
+notmmUpregulated_expression <- t_NBL[, colnames(t_NBL) %in%  c("ACADM", "CALM2", "CPNE3", "FAXDC2", 
+                                                               "GLS", "HECW2", "IGSF10", "KIF13A", "KIFAP3") , drop = FALSE]
+all_expression <- t_NBL[, colnames(t_NBL) %in% c("ACADM", "CALM2", "CPNE3", "FAXDC2", 
+                                                 "GLS", "HECW2", "IGSF10", "KIF13A", "KIFAP3", 
+                                                 "LCN15", "TPGS1", "TSEN54", "WDR74") , drop = FALSE]
+t_NBL <- as.data.frame(t_NBL)
+t_NBL <- t_NBL[match(metadata$SampleID, rownames(t_NBL)), ]
+
+### Now, looking at the correlation of all genes with telomere content.
+telomere_content <- metadata$Telomere.Content
+
+# vector to store results.
+cor_values <- numeric(ncol(t_NBL))
+p_values <- numeric(ncol(t_NBL))
+
+# Looping through each gene for expression-based Pearson correlation with teomere content
+for (i in seq_along(t_NBL)) {
+  result <- cor.test(t_NBL[[i]], telomere_content, method = "pearson")
+  cor_values[i] <- result$estimate
+  p_values[i] <- result$p.value
+}
+
+# building result table for all genes for calculating FDR.
+cor_results <- data.frame(
+  Gene = colnames(t_NBL),
+  correlation = cor_values,
+  p_values = p_values
+)
+
+# calculating FDR.
+cor_results$FDR <- p.adjust(cor_results$p_values, method = "fdr")
+cor_results <- cor_results %>%
+  arrange(FDR)
+
+# Now extracting only the TMM-upregulated subset.
+cor_results_tmmUpregulated_tc <- cor_results[
+  cor_results$Gene %in% c("LCN15", "TPGS1", "TSEN54", "WDR74"),
+]
+cor_results_tmmUpregulated_tc <- cor_results_tmmUpregulated_tc %>%
+  arrange(FDR)
+
+cor_results_tmmUpregulated_tc <- cor_results[
+  cor_results$Gene %in% c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", "MAGEA9", "SPEF1", "TERT", "WDR74"),
+]
+cor_results_tmmUpregulated_tc <- cor_results_tmmUpregulated_tc %>%
+  arrange(FDR)
+
+
+# Now, looking at NO_TMM upregulated markers.
+cor_results_notmmUpregulated_tc <- cor_results[
+  cor_results$Gene %in% c("ACADM", "CALM2", "CPNE3", "FAXDC2", "GLS", "HECW2", "IGSF10", "KIF13A", "KIFAP3"),
+]
+cor_results_notmmUpregulated_tc <- cor_results_notmmUpregulated_tc %>%
+  arrange(FDR)
+
+cor_results_notmmUpregulated_tc <- cor_results[
+  cor_results$Gene %in% c("ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2"),
+]
+cor_results_notmmUpregulated_tc <- cor_results_notmmUpregulated_tc %>%
+  arrange(FDR)
+
+# no correlation between telomere content and signatures here.
+#################################################################################################
+
+## Looking at if there is difference in telomere content between ALT, Telomerase and NO_TMM.
+
+ggplot(metadata, aes(x = TMM, y = Telomere.Content, fill = TMM, color = TMM)) +
+  geom_boxplot(size = 0.2, alpha = 0.5, outlier.shape = NA) +
+  geom_point(position = position_jitter(width = 0.2), size = 3) +
+  scale_fill_manual(values = c("Telomerase" = "lightpink2",
+                               "NO_TMM" = "lightgreen",
+                               "ALT" = "blue")) +
+  scale_color_manual(values = c("Telomerase"="darkred",
+                                "NO_TMM" = "darkgreen",
+                                "ALT" = "blue")) +
+  theme_classic() +
+  labs(x = "TMM Group", y = "GSVA Score") +  scale_y_log10() +
+  theme(
+    axis.text.x = element_text(vjust = 1, hjust = 1),
+    axis.title = element_text(size = 18),
+    axis.text = element_text(size = 12, face = "bold"),
+    legend.position = "none"
+  ) +
+  stat_compare_means(comparisons = list(c("ALT","NO_TMM")), method= "t.test",
+                     method.args = list(alternative ="two.sided"), size = 6, tip.length = 0.01,
+                     label.y = 1.2) +
+  stat_compare_means(comparisons = list(c("Telomerase","NO_TMM")), method= "t.test",
+                     method.args = list(alternative ="two.sided"), size = 6, tip.length = 0.01,
+                     label.y = 1.4)
 
 
 
