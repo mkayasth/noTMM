@@ -15,7 +15,7 @@ candidate_genes <- c("ACADM", "CALM2", "CPNE3", "FAXDC2", "GLS", "HECW2", "IGSF1
 num_genes <- length(candidate_genes)
 
 # Saving the plot as a PDF.
-pdf("rna-seq-regression_results_TMMup.pdf", width = 4, height = 4)
+pdf("rna-seq-regression_results_noTMMup2.pdf", width = 4, height = 4)
 
 regression_test_candidates <- lcpm[rownames(lcpm) %in% candidate_genes, ]
 regression_test_candidates <- regression_test_candidates[, match(metadata_combined$SampleID, colnames(regression_test_candidates))]
@@ -330,9 +330,9 @@ telomere_content <- metadata$Telomere.Content
 cor_values <- numeric(ncol(t_NBL))
 p_values <- numeric(ncol(t_NBL))
 
-# Looping through each gene for expression-based Pearson correlation with teomere content
+# Looping through each gene for expression-based Pearson correlation with telomere content.
 for (i in seq_along(t_NBL)) {
-  result <- cor.test(t_NBL[[i]], telomere_content, method = "pearson")
+  result <- cor.test(t_NBL[[i]], telomere_content, method = "spearman")
   cor_values[i] <- result$estimate
   p_values[i] <- result$p.value
 }
@@ -391,7 +391,7 @@ ggplot(metadata, aes(x = TMM, y = Telomere.Content, fill = TMM, color = TMM)) +
                                 "NO_TMM" = "darkgreen",
                                 "ALT" = "blue")) +
   theme_classic() +
-  labs(x = "TMM Group", y = "GSVA Score") +  scale_y_log10() +
+  labs(x = "TMM Group", y = "Telomere Content") +  scale_y_log10() +
   theme(
     axis.text.x = element_text(vjust = 1, hjust = 1),
     axis.title = element_text(size = 18),

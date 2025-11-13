@@ -90,6 +90,8 @@ autoplot(pca_post, data = metadata_combined, colour = 'TMM', x = 1, y = 2) +
   ggtitle("After ComBat (by TMM)") +
   theme_classic(base_size = 14)
 
+lcpm <- combat_lcpm
+
 
 ### combining genes significantly differentially expressed in their individual datasets to see if they still are differentially expressed in this combined dataset.
 combined_ALT_target <- rbind(unique(rownames(candidate_genes_ALT_target), rownames(candidate_genes_ALT)))
@@ -378,7 +380,7 @@ candidates_notmm_upregulated_telomerase_combined <- candidates_notmm_upregulated
 set.seed(123)
 lcpm <- lcpm[, match(metadata_combined$SampleID, colnames(lcpm))]
 metadata_combined$Strata <- interaction(metadata_combined$TMM, metadata_combined$Cohort, drop = TRUE)
-train_idx <- createDataPartition(metadata_combined$Cohort, p = 0.8, list = FALSE)
+train_idx <- createDataPartition(metadata_combined$Cohort, p = 0.7, list = FALSE)
 
 lcpm_train <- lcpm[, train_idx, drop = FALSE]
 lcpm_test <- lcpm[, -train_idx, drop = FALSE]
@@ -393,7 +395,7 @@ a <- intersect(candidates_tmm_upregulated_telomerase_combined$Gene, candidates_t
 
 
 tmm_target_upregulated <- run_exhaustive_forward_auc(expr_matrix = lcpm_train, metadata = metadata_train, 
-                                                     candidate_genes = unique(candidates_tmm_upregulated_combined$Gene), 
+                                                     candidate_genes = a, 
                                                      phenotype_col = "TMM_Case",
                                                      label_one = "TMM", label_two = "NO_TMM",
                                                      max_genes = 20,
@@ -405,7 +407,7 @@ candidates_notmm_upregulated_combined <- rbind(candidates_notmm_upregulated_ALT_
 b <- intersect(candidates_notmm_upregulated_telomerase_combined$Gene, candidates_notmm_upregulated_ALT_combined$Gene)
 
 tmm_target_downregulated <- run_exhaustive_forward_auc(expr_matrix = lcpm_train, metadata = metadata_train, 
-                                                       candidate_genes = unique(candidates_notmm_upregulated_combined$Gene), 
+                                                       candidate_genes = b, 
                                                        phenotype_col = "TMM_Case",
                                                        label_one = "NO_TMM", label_two = "TMM",
                                                        max_genes = 20,
@@ -417,12 +419,14 @@ tmm_target_downregulated <- run_exhaustive_forward_auc(expr_matrix = lcpm_train,
 
 # First, on training set.
 
-candidate_genes <- list(TMM = c("WDR74", "USH1G", "TERT", "ALG1L2", "SLC1A5",
-                                "CRYBG2", "NBPF6", "RUVBL1", "GALR2", "DDX39A", "C6orf132", "C1QTNF4")) #0.8 with wdr74 as pivot.
+# candidate_genes <- list(TMM = c("WDR74", "USH1G", "TERT", "ALG1L2", "SLC1A5",
+#                                 "CRYBG2", "NBPF6", "RUVBL1", "GALR2", "DDX39A", "C6orf132", "C1QTNF4")) #0.8 with wdr74 as pivot.
 
 # candidate_genes <- list(TMM = c("WDR74", "USH1G", "TERT", "ALG1L2", "SLC1A5", "CRYBG2", "NBPF6", "C1QTNF4", "DPEP3")) #0.7 with wdr74 as pivot.
 
 # candidate_genes <- list(TMM = c("WDR74", "LCN15", "ALG1L2", "TERT", "CPA1", "EEF1D", "OTX2")) # 0.6 with wdr74 as pivot.
+
+
 
 gsvapar <- gsvaParam(as.matrix(lcpm_train), candidate_genes, kcdf = "Gaussian")
 gsva_result <- gsva(gsvapar)
@@ -1198,11 +1202,11 @@ notmm_upregulated_kfold <- run_kfold_auc(expr_matrix = lcpm, metadata = metadata
 
 
 ## genes present in at least three of the five folds -- for tmm upregulated genes.
-all_genes <- unlist(lapply(tmm_upregulated_kfold$fold_results, function(x) x$selected_genes))
+all_genes <- unlist(lapply(notmm_upregulated_kfold$fold_results, function(x) x$selected_genes))
 gene_counts <- table(all_genes)
 
 kfold_tmm_upregulated_genes <- names(gene_counts[gene_counts >= 3])
-# kfold_tmm_upregulated_genes <- names(gene_counts[gene_counts >= 3])
+
 
 
 
@@ -1213,11 +1217,18 @@ gene_counts <- table(all_genes)
 # kfold_notmm_upregulated_genes <- names(gene_counts[gene_counts >= 3])
 kfold_notmm_upregulated_genes <- names(gene_counts[gene_counts >= 3])
 
-candidate_genes2 <- list(TMM = c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", "MAGEA9", "SPEF1", "TERT", "WDR74"))
-candidate_genes <- list(TMM = c("ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2"))
+# candidate_genes2 <- list(TMM = c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", "MAGEA9", "SPEF1", "TERT", "WDR74"))
+# candidate_genes <- list(TMM = c("ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2"))
 
-candidate_genes2 <- list(TMM = c("LCN15", "TPGS1", "TSEN54", "WDR74")) #up in TMM.
-candidate_genes <- list(TMM = c("ACADM", "CALM2", "CPNE3", "FAXDC2", "GLS", "HECW2", "IGSF10", "KIF13A", "KIFAP3")) #up in NO_TMM.
+# candidate_genes2 <- list(TMM = c("LCN15", "TPGS1", "TSEN54", "WDR74")) #up in TMM.
+# candidate_genes <- list(TMM = c("ACADM", "CALM2", "CPNE3", "FAXDC2", "GLS", "HECW2", "IGSF10", "KIF13A", "KIFAP3")) #up in NO_TMM.
+
+candidate_genes <- list(TMM = c("CPNE3", "DYNC1I2", "EPS8L1", "FAXDC2", "GLS", "HECW2",   
+                                "IGSF10",  "KCTD21",  "PGM2L1" )) ## approach 2: no_tmm upregulated k-fold validation.
+candidate_genes2 <- list(TMM = c("HTR6", "TPGS1", "TSEN54", "WDR24", "WDR74")) ## approach 2: tmm upregulated k-fold validation.
+
+candidate_genes <- list(TMM = c()) ## approach 1: no_tmm upregulated k-fold validation.
+candidate_genes2 <- list(TMM = c()) ## approach 1: tmm upregulatd k-fold validation.
 
 # upregulated in NO_TMM.
 gsvapar <- gsvaParam(as.matrix(lcpm), candidate_genes, kcdf = "Gaussian")
