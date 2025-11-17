@@ -101,7 +101,7 @@ lcpm_test <- lcpm[, -train_idx, drop = FALSE]
 metadata_train <- metadata_combined[train_idx, ]
 metadata_test <- metadata_combined[-train_idx, ]
 
-
+#####
 best_geneset <- c("WDR74", "USH1G", "TERT", "ALG1L2", "SLC1A5",
                   "CRYBG2", "NBPF6", "RUVBL1", "GALR2", "DDX39A", "C6orf132", "C1QTNF4") #0.8 split.
 best_geneset <- c("WDR74", "USH1G", "TERT", "ALG1L2", "SLC1A5", "CRYBG2", "NBPF6", "C1QTNF4", "DPEP3") # 0.7 split.
@@ -115,6 +115,9 @@ best_geneset <- c("FAXDC2", "MYO5A", "STRADB", "KLHL2", "MOB1B", "PRDM2", "EXTL2
 
 best_geneset <- c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", "MAGEA9", "SPEF1", "TERT", "WDR74") # 5-fold validation tmm winner.
 best_geneset <- c("ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2") # 5-fold validation no_tmm winner.
+
+#####
+
 
 res <- evaluate_gsva_classifier(
   expr_train = lcpm_train,
@@ -350,6 +353,19 @@ metadata_train <- metadata_combined[train_idx, ]
 metadata_test <- metadata_combined[-train_idx, ]
 
 
+set.seed(123)
+ackerman_NB_log2 <- ackerman_NB_log2[, match(ackerman_metadata$SampleID, colnames(ackerman_NB_log2))]
+train_idx <- createDataPartition(ackerman_metadata$TMM_Category, p = 0.8, list = FALSE)
+
+ackerman_train <- ackerman_NB_log2[, train_idx, drop = FALSE]
+ackerman_test <- ackerman_NB_log2[, -train_idx, drop = FALSE]
+
+metadata_train <- ackerman_metadata[train_idx, ]
+metadata_test <- ackerman_metadata[-train_idx, ]
+
+
+
+#####
 best_geneset1 <- c("WDR74", "USH1G", "TERT", "ALG1L2", "SLC1A5",
                    "CRYBG2", "NBPF6", "RUVBL1", "GALR2", "DDX39A", "C6orf132", "C1QTNF4") #0.8 split.
 best_geneset1 <- c("WDR74", "USH1G", "TERT", "ALG1L2", "SLC1A5", "CRYBG2", "NBPF6", "C1QTNF4", "DPEP3") # 0.7 split.
@@ -366,9 +382,52 @@ best_geneset2 <- c("ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", "HOXC9", "ITPR
 
 best_geneset1 <- c("LCN15", "TPGS1", "TSEN54", "WDR74")
 best_geneset2 <- c("ACADM", "CALM2", "CPNE3", "FAXDC2", "GLS", "HECW2", "IGSF10", "KIF13A", "KIFAP3")
+#############################
+
+best_geneset1 <- c("CPA1", "TERT", "WDR74") # TMM upregulated: approach 1; 3-times repeated in k-fold validation.
+best_geneset2 <- c("ACADM", "EPHA5", "FAXDC2", "GLIPR1L2", "HOXC9", "KIFAP3",
+                   "NEK7", "PRDM2") # NO_TMM upregulated: approach 1; 3-times repeated in k-fold validation.
+
+best_geneset1 <- c("ALDH1A2", "CPA1",    
+                                 "FOXK2", "MAGEA9", "PRR7",    
+                                 "RNF126", "SPEF1", "TERT", "TSEN54", "WDR74", "XRCC3") # approach 1: tmm upregulated 2-times repeat in k-fold validation.
+best_geneset2 <- c("ACADM", "CPNE3", "EPHA5", "EPS8L1", "FAXDC2", "FGD4", "GLIPR1L2",
+                   "HOXC9", "KIFAP3", "KYAT3", "MMP16", "NEK7",
+                   "PLEKHA5", "PRDM2", "SATB1", "ZNF197") # approach 1: no_tmm Upregulated 2-times repeat in k-fold validation.
+
+
+
+
+best_geneset1 <- c("TERT", "TSEN54", "WDR24", "WDR74") # TMM-upregulated: approach 3; 3-times repeat in k-fold validation.
+best_geneset2 <- c("CPNE8", "EPS8L1", "FAXDC2", "IGSF10", "KIFAP3", "MYO9A",
+                   "PGM2L1", "PYROXD1", "SH3GLB1") # no_tmm upregulated: approach 3; 3-times repeat in k-fold validation.
+
+best_geneset1 <- c("DDX39A", "TERT", "TSEN54", "WDR24", "WDR74") # TMM-upregulated: approach 3; 2-times repeat in k-fold validation.
+best_geneset2 <- c("CPNE8", "EPS8L1", "FAXDC2", "IGSF10", "KIFAP3",  "MYO9A", 
+                   "PGM2L1", "PYROXD1", "RAB5B", "SH3GLB1") # no_tmm upregulated: approach 3; 2-times repeat in k-fold validation.
+
+
+
+best_geneset1 <- c("HTR6", "TPGS1", "TSEN54", "WDR24", "WDR74") # TMM-upregulated: approach 2.
+best_geneset2 <- c("CPNE3", "DYNC1I2", "EPS8L1", "FAXDC2", "GLS", "HECW2",   
+                   "IGSF10",  "KCTD21",  "PGM2L1" ) # no_tmm upregulated: approach 2.
+
+best_geneset1 <- c("DDN", "HTR6", "PIDD1", "TPGS1", 
+                   "TSEN54", "WDR24", "WDR74") # tmm upregulated: approach 2; 2-times repeat in 5-fold validation.
+best_geneset2 <- c("CALM2", "CPNE3", "DYNC1I2", "EPS8L1", "FAXDC2", "GLS", "HECW2",
+                   "IGSF10", "KCTD21", "LIFR", "PGM2L1", "PYROXD1") #no_tmm upregulated: approach 2; 2-times repeat in 5-fold validation.
+
 
 res <- evaluate_gsva_classifier(expr_train = lcpm_train, 
                                 expr_test = lcpm_test,
+                                metadata_train = metadata_train, metadata_test = metadata_test,
+                                geneset_tmmUp = best_geneset1, geneset_tmmDown = best_geneset2,
+                                phenotype_col = "TMM_Case",
+                                label_one = "NO_TMM", label_two = "TMM"
+)
+
+res <- evaluate_gsva_classifier(expr_train = ackerman_train, 
+                                expr_test = ackerman_test,
                                 metadata_train = metadata_train, metadata_test = metadata_test,
                                 geneset_tmmUp = best_geneset1, geneset_tmmDown = best_geneset2,
                                 phenotype_col = "TMM_Case",
@@ -441,11 +500,11 @@ evaluate_gsva_external <- function(expr_new, metadata_new,
   return(results)
 }
 
-colnames(metadata_0532) <- c("RNASeqID", "TMM", "TMM_Case", "SampleID")
-res2 <- evaluate_gsva_external(expr_new = lcpm, metadata_new = metadata_combined,
+colnames(metadata_0532) <- c("SampleID", "TMM", "TMM_Case")
+res2 <- evaluate_gsva_external(expr_new = ackerman_NB_log2, metadata_new = ackerman_metadata,
                                geneset_tmmUp = best_geneset1, geneset_tmmDown = best_geneset2,
                                phenotype_col = "TMM_Case",
                                label_one = "NO_TMM", label_two = "TMM",
-                               threshold = 0.5,
+                               threshold = 0.2,
                                kcdf = "Gaussian")
 

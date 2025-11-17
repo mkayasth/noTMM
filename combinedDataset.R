@@ -374,6 +374,8 @@ candidates_notmm_upregulated_telomerase_combined <- candidates_notmm_upregulated
   arrange(desc(R.Squared))
 
 
+########################################################################################
+
 ### finding the best signature.
 
 ##### dividing lcpm into training and testing set.
@@ -1176,7 +1178,7 @@ ggplot(gsva_long, aes(x = TMM_Category, y = GSVA_Score, fill = TMM_Category, col
                      method.args = list(alternative ="two.sided"), size = 6, tip.length = 0.01,
                      label.y = 1.4)
 
-
+###############################################################################################
 ######
 # k-fold validation.
 
@@ -1185,7 +1187,7 @@ tmm_upregulated_kfold <- run_kfold_auc(expr_matrix = lcpm, metadata = metadata_c
                                        max_genes = 20, k = 5,
                                        pivot_gene = "WDR74")
 
-tmm_upregulated_kfold <- run_kfold_auc(expr_matrix = lcpm, metadata = metadata_combined, candidate_genes = a, #using only the intersections.
+tmm_upregulated_kfold_approach2 <- run_kfold_auc(expr_matrix = lcpm, metadata = metadata_combined, candidate_genes = a, #using only the intersections. # approach 2.
                                        phenotype_col = "TMM_Case", label_one = "TMM", label_two = "NO_TMM",
                                        max_genes = 20, k = 5,
                                        pivot_gene = "WDR74")
@@ -1195,27 +1197,40 @@ notmm_upregulated_kfold <- run_kfold_auc(expr_matrix = lcpm, metadata = metadata
                                          max_genes = 20, k = 5,
                                          pivot_gene = "FAXDC2")
 
-notmm_upregulated_kfold <- run_kfold_auc(expr_matrix = lcpm, metadata = metadata_combined, candidate_genes = b, #using only the intersections.
+notmm_upregulated_kfold_approach2 <- run_kfold_auc(expr_matrix = lcpm, metadata = metadata_combined, candidate_genes = b, #using only the intersections. # approach 2.
                                          phenotype_col = "TMM_Case", label_one = "NO_TMM", label_two = "TMM",
                                          max_genes = 20, k = 5,
                                          pivot_gene = "FAXDC2")
 
 
-## genes present in at least three of the five folds -- for tmm upregulated genes.
+## genes present in at least three of the five folds -- approach 1.
+#for tmm upregulated genes.
+all_genes <- unlist(lapply(tmm_upregulated_kfold$fold_results, function(x) x$selected_genes))
+gene_counts <- table(all_genes)
+
+kfold_tmm_upregulated_genes_approach1 <- names(gene_counts[gene_counts >= 2])
+
+#for no_tmm upregulated genes.
 all_genes <- unlist(lapply(notmm_upregulated_kfold$fold_results, function(x) x$selected_genes))
 gene_counts <- table(all_genes)
 
-kfold_tmm_upregulated_genes <- names(gene_counts[gene_counts >= 3])
+kfold_notmm_upregulated_genes_approach1 <- names(gene_counts[gene_counts >= 2])
 
 
-
-
-## genes present in at least three of the five folds --  for no_tmm upregulated genes.
-all_genes <- unlist(lapply(notmm_upregulated_kfold$fold_results, function(x) x$selected_genes))
+## genes present in at least three of the five folds -- approach 2.
+#for tmm upregulated genes.
+all_genes <- unlist(lapply(tmm_upregulated_kfold_approach2$fold_results, function(x) x$selected_genes))
 gene_counts <- table(all_genes)
+kfold_tmm_upregulated_genes_approach2 <- names(gene_counts[gene_counts >= 2])
 
-# kfold_notmm_upregulated_genes <- names(gene_counts[gene_counts >= 3])
-kfold_notmm_upregulated_genes <- names(gene_counts[gene_counts >= 3])
+# for no_tmm upregulated genes.
+all_genes <- unlist(lapply(notmm_upregulated_kfold_approach2$fold_results, function(x) x$selected_genes))
+gene_counts <- table(all_genes)
+kfold_notmm_upregulated_genes_approach2 <- names(gene_counts[gene_counts >= 2])
+
+
+
+
 
 # candidate_genes2 <- list(TMM = c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", "MAGEA9", "SPEF1", "TERT", "WDR74"))
 # candidate_genes <- list(TMM = c("ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2"))
@@ -1227,345 +1242,32 @@ candidate_genes <- list(TMM = c("CPNE3", "DYNC1I2", "EPS8L1", "FAXDC2", "GLS", "
                                 "IGSF10",  "KCTD21",  "PGM2L1" )) ## approach 2: no_tmm upregulated k-fold validation.
 candidate_genes2 <- list(TMM = c("HTR6", "TPGS1", "TSEN54", "WDR24", "WDR74")) ## approach 2: tmm upregulated k-fold validation.
 
-candidate_genes <- list(TMM = c()) ## approach 1: no_tmm upregulated k-fold validation.
-candidate_genes2 <- list(TMM = c()) ## approach 1: tmm upregulatd k-fold validation.
 
-# upregulated in NO_TMM.
-gsvapar <- gsvaParam(as.matrix(lcpm), candidate_genes, kcdf = "Gaussian")
-gsva_result <- gsva(gsvapar)
-gsva_result <- as.data.frame(gsva_result)
-rownames(gsva_result) <- NULL
+candidate_genes <- list(TMM = c("CALM2", "CPNE3", "DYNC1I2", "EPS8L1", "FAXDC2", "GLS", "HECW2",
+                                "IGSF10", "KCTD21", "LIFR", "PGM2L1", "PYROXD1")) # approach 2: no_tmm Upregulated 2-times repeat in k-fold validation.
+candidate_genes2 <- list(TMM = c("DDN", "HTR6", "PIDD1", "TPGS1", 
+                                 "TSEN54", "WDR24", "WDR74"))  # approach 2: tmm Upregulated 2-times repeat in k-fold validation.
 
 
-gsva_long <- gsva_result %>%
-  pivot_longer(cols = everything(),
-               names_to = "SampleID",
-               values_to = "GSVA_Score"
-  )
 
 
-gsva_long <- left_join(gsva_long, metadata_combined[, c("SampleID", "TMM", "TMM_Case")], by = "SampleID")
+candidate_genes <- list(TMM = c("ACADM", "EPHA5", "FAXDC2", "GLIPR1L2", "HOXC9", "KIFAP3",
+                                "NEK7", "PRDM2" )) ## approach 1: no_tmm upregulated k-fold validation.
+candidate_genes2 <- list(TMM = c("CPA1", "TERT", "WDR74")) ## approach 1: tmm upregulatd k-fold validation.
 
 
-ggplot(gsva_long, aes(x = TMM, y = GSVA_Score, fill = TMM, color = TMM)) +
-  geom_boxplot(size = 0.2, alpha = 0.5, outlier.shape = NA) +
-  geom_point(position = position_jitter(width = 0.2), size = 3) +
-  scale_fill_manual(values = c("Telomerase" = "lightpink2",
-                               "NO_TMM" = "lightgreen",
-                               "ALT" = "blue")) +
-  scale_color_manual(values = c("Telomerase"="darkred",
-                                "NO_TMM" = "darkgreen",
-                                "ALT" = "blue")) +
-  theme_classic() +
-  labs(x = "TMM Group", y = "GSVA Score") +
-  theme(
-    axis.text.x = element_text(vjust = 1, hjust = 1),
-    axis.title = element_text(size = 18),
-    axis.text = element_text(size = 12, face = "bold"),
-    legend.position = "none"
-  ) +
-  stat_compare_means(comparisons = list(c("ALT","NO_TMM")), method= "t.test",
-                     method.args = list(alternative ="two.sided"), size = 6, tip.length = 0.01,
-                     label.y = 1.2) +
-  stat_compare_means(comparisons = list(c("Telomerase","NO_TMM")), method= "t.test",
-                     method.args = list(alternative ="two.sided"), size = 6, tip.length = 0.01,
-                     label.y = 1.4)
+candidate_genes <- list(TMM =c("ACADM", "CPNE3", "EPHA5", "EPS8L1", "FAXDC2", "FGD4", "GLIPR1L2",
+                               "HOXC9", "KIFAP3", "KYAT3", "MMP16", "NEK7",
+                               "PLEKHA5", "PRDM2", "SATB1", "ZNF197")) # approach 1: no_tmm Upregulated 2-times repeat in k-fold validation.
+candidate_genes2 <- list(TMM = c("ALDH1A2", "CPA1",    
+                                 "FOXK2", "MAGEA9", "PRR7",    
+                                 "RNF126", "SPEF1", "TERT", "TSEN54", "WDR74", "XRCC3")) # approach 1: tmm upregulated 2-times repeat in k-fold validation.
 
 
-## Now, trying on target data.
-gsvapar <- gsvaParam(as.matrix(tmm_lcpm_target), candidate_genes, kcdf = "Gaussian")
-gsva_result <- gsva(gsvapar)
-gsva_result <- as.data.frame(gsva_result)
-rownames(gsva_result) <- NULL
 
 
-gsva_long <- gsva_result %>%
-  pivot_longer(cols = everything(),
-               names_to = "SampleID",
-               values_to = "GSVA_Score"
-  )
 
-
-gsva_long <- left_join(gsva_long, metadata[, c("SampleID", "TMM", "TMM_Case")], by = "SampleID")
-
-
-ggplot(gsva_long, aes(x = TMM, y = GSVA_Score, fill = TMM, color = TMM)) +
-  geom_boxplot(size = 0.2, alpha = 0.5, outlier.shape = NA) +
-  geom_point(position = position_jitter(width = 0.2), size = 3) +
-  scale_fill_manual(values = c("Telomerase" = "lightpink2",
-                               "NO_TMM" = "lightgreen",
-                               "ALT" = "blue")) +
-  scale_color_manual(values = c("Telomerase"="darkred",
-                                "NO_TMM" = "darkgreen",
-                                "ALT" = "blue")) +
-  theme_classic() +
-  labs(x = "TMM Group", y = "GSVA Score") +
-  theme(
-    axis.text.x = element_text(vjust = 1, hjust = 1),
-    axis.title = element_text(size = 18),
-    axis.text = element_text(size = 12, face = "bold"),
-    legend.position = "none"
-  ) +
-  stat_compare_means(comparisons = list(c("ALT","NO_TMM")), method= "t.test",
-                     method.args = list(alternative ="two.sided"), size = 6, tip.length = 0.01,
-                     label.y = 1.2) +
-  stat_compare_means(comparisons = list(c("Telomerase","NO_TMM")), method= "t.test",
-                     method.args = list(alternative ="two.sided"), size = 6, tip.length = 0.01,
-                     label.y = 1.4)
-
-
-## Now, trying on 0532 data.
-gsvapar <- gsvaParam(as.matrix(tmm_lcpm), candidate_genes, kcdf = "Gaussian")
-gsva_result <- gsva(gsvapar)
-gsva_result <- as.data.frame(gsva_result)
-rownames(gsva_result) <- NULL
-
-
-gsva_long <- gsva_result %>%
-  pivot_longer(cols = everything(),
-               names_to = "SampleID",
-               values_to = "GSVA_Score"
-  )
-
-
-gsva_long <- left_join(gsva_long, metadata_0532[, c("RNAseq_SampleID", "TMM", "TMMCase")], by = c("SampleID" = "RNAseq_SampleID"))
-
-gsva_long$TMM <- factor(gsva_long$TMM, levels = c("ALT+", "TMM-", "TERT+"))
-
-ggplot(gsva_long, aes(x = TMM, y = GSVA_Score, fill = TMM, color = TMM)) +
-  geom_boxplot(size = 0.2, alpha = 0.5, outlier.shape = NA) +
-  geom_point(position = position_jitter(width = 0.2), size = 3) +
-  scale_fill_manual(values = c("TERT+" = "lightpink2",
-                               "TMM-" = "lightgreen",
-                               "ALT+" = "blue")) +
-  scale_color_manual(values = c("TERT+"="darkred",
-                                "TMM-" = "darkgreen",
-                                "ALT+" = "blue")) +
-  theme_classic() +
-  labs(x = "TMM Group", y = "GSVA Score") +
-  theme(
-    axis.text.x = element_text(vjust = 1, hjust = 1),
-    axis.title = element_text(size = 18),
-    axis.text = element_text(size = 12, face = "bold"),
-    legend.position = "none"
-  ) +
-  stat_compare_means(comparisons = list(c("ALT+","TMM-")), method= "t.test",
-                     method.args = list(alternative ="two.sided"), size = 6, tip.length = 0.01,
-                     label.y = 1.2) +
-  stat_compare_means(comparisons = list(c("TERT+","TMM-")), method= "t.test",
-                     method.args = list(alternative ="two.sided"), size = 6, tip.length = 0.01,
-                     label.y = 1.4)
-
-# Now, trying on Ackerman data.
-gsvapar <- gsvaParam(as.matrix(ackerman_NB), candidate_genes, kcdf = "Gaussian")
-gsva_result <- gsva(gsvapar)
-gsva_result <- as.data.frame(gsva_result)
-rownames(gsva_result) <- NULL
-
-
-gsva_long <- gsva_result %>%
-  pivot_longer(cols = everything(),
-               names_to = "SampleID",
-               values_to = "GSVA_Score"
-  )
-
-
-gsva_long <- left_join(gsva_long, ackerman_metadata[, c("SampleID", "TMM_Category", "TMM_Case")], by = "SampleID")
-
-
-ggplot(gsva_long, aes(x = TMM_Category, y = GSVA_Score, fill = TMM_Category, color = TMM_Category)) +
-  geom_boxplot(size = 0.2, alpha = 0.5, outlier.shape = NA) +
-  geom_point(position = position_jitter(width = 0.2), size = 3) +
-  scale_fill_manual(values = c("Telomerase" = "lightpink2",
-                               "NO_TMM" = "lightgreen",
-                               "ALT" = "blue")) +
-  scale_color_manual(values = c("Telomerase"="darkred",
-                                "NO_TMM" = "darkgreen",
-                                "ALT" = "blue")) +
-  theme_classic() +
-  labs(x = "TMM Group", y = "GSVA Score") +
-  theme(
-    axis.text.x = element_text(vjust = 1, hjust = 1),
-    axis.title = element_text(size = 18),
-    axis.text = element_text(size = 12, face = "bold"),
-    legend.position = "none"
-  ) +
-  stat_compare_means(comparisons = list(c("ALT","NO_TMM")), method= "t.test",
-                     method.args = list(alternative ="two.sided"), size = 6, tip.length = 0.01,
-                     label.y = 1.2) +
-  stat_compare_means(comparisons = list(c("Telomerase","NO_TMM")), method= "t.test",
-                     method.args = list(alternative ="two.sided"), size = 6, tip.length = 0.01,
-                     label.y = 1.4)
-
-#############################
-
-##### Looking at the boxplots for the signature genes -- now, downregulated genes.
-
-gsvapar <- gsvaParam(as.matrix(lcpm), candidate_genes2, kcdf = "Gaussian")
-gsva_result <- gsva(gsvapar)
-gsva_result <- as.data.frame(gsva_result)
-rownames(gsva_result) <- NULL
-
-
-gsva_long <- gsva_result %>%
-  pivot_longer(cols = everything(),
-               names_to = "SampleID",
-               values_to = "GSVA_Score"
-  )
-
-
-gsva_long <- left_join(gsva_long, metadata_combined[, c("SampleID", "TMM", "TMM_Case")], by = "SampleID")
-
-
-ggplot(gsva_long, aes(x = TMM, y = GSVA_Score, fill = TMM, color = TMM)) +
-  geom_boxplot(size = 0.2, alpha = 0.5, outlier.shape = NA) +
-  geom_point(position = position_jitter(width = 0.2), size = 3) +
-  scale_fill_manual(values = c("Telomerase" = "lightpink2",
-                               "NO_TMM" = "lightgreen",
-                               "ALT" = "blue")) +
-  scale_color_manual(values = c("Telomerase"="darkred",
-                                "NO_TMM" = "darkgreen",
-                                "ALT" = "blue")) +
-  theme_classic() +
-  labs(x = "TMM Group", y = "GSVA Score") +
-  theme(
-    axis.text.x = element_text(vjust = 1, hjust = 1),
-    axis.title = element_text(size = 18),
-    axis.text = element_text(size = 12, face = "bold"),
-    legend.position = "none"
-  ) +
-  stat_compare_means(comparisons = list(c("ALT","NO_TMM")), method= "t.test",
-                     method.args = list(alternative ="two.sided"), size = 6, tip.length = 0.01,
-                     label.y = 1.2) +
-  stat_compare_means(comparisons = list(c("Telomerase","NO_TMM")), method= "t.test",
-                     method.args = list(alternative ="two.sided"), size = 6, tip.length = 0.01,
-                     label.y = 1.4)
-
-## Now, trying on target data.
-gsvapar <- gsvaParam(as.matrix(tmm_lcpm_target), candidate_genes2, kcdf = "Gaussian")
-gsva_result <- gsva(gsvapar)
-gsva_result <- as.data.frame(gsva_result)
-rownames(gsva_result) <- NULL
-
-
-gsva_long <- gsva_result %>%
-  pivot_longer(cols = everything(),
-               names_to = "SampleID",
-               values_to = "GSVA_Score"
-  )
-
-
-gsva_long <- left_join(gsva_long, metadata[, c("SampleID", "TMM", "TMM_Case")], by = "SampleID")
-
-
-ggplot(gsva_long, aes(x = TMM, y = GSVA_Score, fill = TMM, color = TMM)) +
-  geom_boxplot(size = 0.2, alpha = 0.5, outlier.shape = NA) +
-  geom_point(position = position_jitter(width = 0.2), size = 3) +
-  scale_fill_manual(values = c("Telomerase" = "lightpink2",
-                               "NO_TMM" = "lightgreen",
-                               "ALT" = "blue")) +
-  scale_color_manual(values = c("Telomerase"="darkred",
-                                "NO_TMM" = "darkgreen",
-                                "ALT" = "blue")) +
-  theme_classic() +
-  labs(x = "TMM Group", y = "GSVA Score") +
-  theme(
-    axis.text.x = element_text(vjust = 1, hjust = 1),
-    axis.title = element_text(size = 18),
-    axis.text = element_text(size = 12, face = "bold"),
-    legend.position = "none"
-  ) +
-  stat_compare_means(comparisons = list(c("ALT","NO_TMM")), method= "t.test",
-                     method.args = list(alternative ="two.sided"), size = 6, tip.length = 0.01,
-                     label.y = 1.2) +
-  stat_compare_means(comparisons = list(c("Telomerase","NO_TMM")), method= "t.test",
-                     method.args = list(alternative ="two.sided"), size = 6, tip.length = 0.01,
-                     label.y = 1.4)
-
-
-## Now, trying on 0532 data.
-gsvapar <- gsvaParam(as.matrix(tmm_lcpm), candidate_genes2, kcdf = "Gaussian")
-gsva_result <- gsva(gsvapar)
-gsva_result <- as.data.frame(gsva_result)
-rownames(gsva_result) <- NULL
-
-
-gsva_long <- gsva_result %>%
-  pivot_longer(cols = everything(),
-               names_to = "SampleID",
-               values_to = "GSVA_Score"
-  )
-
-
-gsva_long <- left_join(gsva_long, metadata_0532[, c("RNAseq_SampleID", "TMM", "TMMCase")], by = c("SampleID" = "RNAseq_SampleID"))
-
-gsva_long$TMM <- factor(gsva_long$TMM, levels = c("ALT+", "TMM-", "TERT+"))
-
-ggplot(gsva_long, aes(x = TMM, y = GSVA_Score, fill = TMM, color = TMM)) +
-  geom_boxplot(size = 0.2, alpha = 0.5, outlier.shape = NA) +
-  geom_point(position = position_jitter(width = 0.2), size = 3) +
-  scale_fill_manual(values = c("TERT+" = "lightpink2",
-                               "TMM-" = "lightgreen",
-                               "ALT+" = "blue")) +
-  scale_color_manual(values = c("TERT+"="darkred",
-                                "TMM-" = "darkgreen",
-                                "ALT+" = "blue")) +
-  theme_classic() +
-  labs(x = "TMM Group", y = "GSVA Score") +
-  theme(
-    axis.text.x = element_text(vjust = 1, hjust = 1),
-    axis.title = element_text(size = 18),
-    axis.text = element_text(size = 12, face = "bold"),
-    legend.position = "none"
-  ) +
-  stat_compare_means(comparisons = list(c("ALT+","TMM-")), method= "t.test",
-                     method.args = list(alternative ="two.sided"), size = 6, tip.length = 0.01,
-                     label.y = 1.2) +
-  stat_compare_means(comparisons = list(c("TERT+","TMM-")), method= "t.test",
-                     method.args = list(alternative ="two.sided"), size = 6, tip.length = 0.01,
-                     label.y = 1.4)
-
-# Now, trying on Ackerman data.
-gsvapar <- gsvaParam(as.matrix(ackerman_NB), candidate_genes2, kcdf = "Gaussian")
-gsva_result <- gsva(gsvapar)
-gsva_result <- as.data.frame(gsva_result)
-rownames(gsva_result) <- NULL
-
-
-gsva_long <- gsva_result %>%
-  pivot_longer(cols = everything(),
-               names_to = "SampleID",
-               values_to = "GSVA_Score"
-  )
-
-
-gsva_long <- left_join(gsva_long, ackerman_metadata[, c("SampleID", "TMM_Category", "TMM_Case")], by = "SampleID")
-
-
-ggplot(gsva_long, aes(x = TMM_Category, y = GSVA_Score, fill = TMM_Category, color = TMM_Category)) +
-  geom_boxplot(size = 0.2, alpha = 0.5, outlier.shape = NA) +
-  geom_point(position = position_jitter(width = 0.2), size = 3) +
-  scale_fill_manual(values = c("Telomerase" = "lightpink2",
-                               "NO_TMM" = "lightgreen",
-                               "ALT" = "blue")) +
-  scale_color_manual(values = c("Telomerase"="darkred",
-                                "NO_TMM" = "darkgreen",
-                                "ALT" = "blue")) +
-  theme_classic() +
-  labs(x = "TMM Group", y = "GSVA Score") +
-  theme(
-    axis.text.x = element_text(vjust = 1, hjust = 1),
-    axis.title = element_text(size = 18),
-    axis.text = element_text(size = 12, face = "bold"),
-    legend.position = "none"
-  ) +
-  stat_compare_means(comparisons = list(c("ALT","NO_TMM")), method= "t.test",
-                     method.args = list(alternative ="two.sided"), size = 6, tip.length = 0.01,
-                     label.y = 1.2) +
-  stat_compare_means(comparisons = list(c("Telomerase","NO_TMM")), method= "t.test",
-                     method.args = list(alternative ="two.sided"), size = 6, tip.length = 0.01,
-                     label.y = 1.4)
-
+############################################################################################
 
 ## incorporating both GSVAs.
 gsvapar <- gsvaParam(as.matrix(lcpm), candidate_genes2, kcdf = "Gaussian")
@@ -1591,6 +1293,7 @@ gsva_long2 <- gsva_result2 %>%
 gsva_long <- left_join(gsva_long, gsva_long2, by = "SampleID")
 gsva_long <- left_join(gsva_long, metadata_combined[, c("SampleID", "TMM", "TMM_Case")], by = "SampleID")
 gsva_long$GSVA_Score <- gsva_long$GSVA_Score_up - gsva_long$GSVA_Score_down
+
 
 ggplot(gsva_long, aes(x = TMM, y = GSVA_Score, fill = TMM, color = TMM)) +
   geom_boxplot(size = 0.2, alpha = 0.5, outlier.shape = NA) +

@@ -4,12 +4,42 @@ library(ggpubr)
 
 
 # boxplots of only the candidate genes (from signature).
+candidate_genes <-  c("CPNE3", "DYNC1I2", "EPS8L1", "FAXDC2", "GLS", "HECW2",   
+                                "IGSF10",  "KCTD21",  "PGM2L1" ) ## approach 2: no_tmm upregulated k-fold validation.
+candidate_genes <- c("HTR6", "TPGS1", "TSEN54", "WDR24", "WDR74") ## approach 2: tmm upregulated k-fold validation.
 
-candidate_genes <- c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", "MAGEA9", "SPEF1", "TERT", "WDR74")
-candidate_genes <- c("ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2")
 
-candidate_genes <- c("LCN15", "TPGS1", "TSEN54", "WDR74") #up in TMM.
-candidate_genes <- c("ACADM", "CALM2", "CPNE3", "FAXDC2", "GLS", "HECW2", "IGSF10", "KIF13A", "KIFAP3") #up in no_tmm.
+candidate_genes <- c("CALM2", "CPNE3", "DYNC1I2", "EPS8L1", "FAXDC2", "GLS", "HECW2",
+                                "IGSF10", "KCTD21", "LIFR", "PGM2L1", "PYROXD1") # approach 2: no_tmm Upregulated 2-times repeat in k-fold validation.
+candidate_genes <- c("DDN", "HTR6", "PIDD1", "TPGS1", 
+                                 "TSEN54", "WDR24", "WDR74")  # approach 2: tmm Upregulated 2-times repeat in k-fold validation.
+
+
+
+
+candidate_genes <- c("ACADM", "EPHA5", "FAXDC2", "GLIPR1L2", "HOXC9", "KIFAP3",
+                                "NEK7", "PRDM2") ## approach 1: no_tmm upregulated k-fold validation.
+candidate_genes <- c("CPA1", "TERT", "WDR74") ## approach 1: tmm upregulatd k-fold validation.
+
+
+candidate_genes <- c("ACADM", "CPNE3", "EPHA5", "EPS8L1", "FAXDC2", "FGD4", "GLIPR1L2",
+                               "HOXC9", "KIFAP3", "KYAT3", "MMP16", "NEK7",
+                               "PLEKHA5", "PRDM2", "SATB1", "ZNF197") # approach 1: no_tmm Upregulated 2-times repeat in k-fold validation.
+candidate_genes <- c("ALDH1A2", "CPA1",    
+                                 "FOXK2", "MAGEA9", "PRR7",    
+                                 "RNF126", "SPEF1", "TERT", "TSEN54", "WDR74", "XRCC3") # approach 1: tmm upregulated 2-times repeat in k-fold validation.
+
+
+
+candidate_genes <- c("CPNE8", "EPS8L1", "FAXDC2", "IGSF10", "KIFAP3", "MYO9A",
+                                "PGM2L1", "PYROXD1", "SH3GLB1") # NO_TMM upregulated: approach 3; 3-times repeat in 5-fold validation.
+candidate_genes <- c("TERT", "TSEN54", "WDR24", "WDR74") # TMM upregulated: approach 3; 3-times repeat in 5-fold validation.
+
+
+candidate_genes <- c("CPNE8", "EPS8L1", "FAXDC2", "IGSF10", "KIFAP3",  
+                                "MYO9A", "PGM2L1", "PYROXD1", "RAB5B", "SH3GLB1") # NO_TMM upregulated: approach 3; 2 times repeat in 5-fold validation.
+candidate_genes <- c("DDX39A", "TERT", "TSEN54", "WDR24", "WDR74") # TMM upregulated: approach 3; 2 times repeat in 5-fold validation.
+
 
 # layout for subplots.
 num_genes <- length(candidate_genes)
@@ -406,4 +436,75 @@ ggplot(metadata, aes(x = TMM, y = Telomere.Content, fill = TMM, color = TMM)) +
                      label.y = 1.4)
 
 
+########################################################################################
+#############################################################################################
+
+# Telomere content vs. gsva per sample.
+candidate_genes <- list(TMM = c("CPNE3", "DYNC1I2", "EPS8L1", "FAXDC2", "GLS", "HECW2",   
+                                "IGSF10",  "KCTD21",  "PGM2L1" )) ## approach 2: no_tmm upregulated k-fold validation.
+candidate_genes2 <- list(TMM = c("HTR6", "TPGS1", "TSEN54", "WDR24", "WDR74")) ## approach 2: tmm upregulated k-fold validation.
+
+
+candidate_genes <- list(TMM = c("CALM2", "CPNE3", "DYNC1I2", "EPS8L1", "FAXDC2", "GLS", "HECW2",
+                                "IGSF10", "KCTD21", "LIFR", "PGM2L1", "PYROXD1")) # approach 2: no_tmm Upregulated 2-times repeat in k-fold validation.
+candidate_genes2 <- list(TMM = c("DDN", "HTR6", "PIDD1", "TPGS1", 
+                                 "TSEN54", "WDR24", "WDR74"))  # approach 2: tmm Upregulated 2-times repeat in k-fold validation.
+
+
+
+
+candidate_genes <- list(TMM = c("ACADM", "EPHA5", "FAXDC2", "GLIPR1L2", "HOXC9", "KIFAP3",
+                                "NEK7", "PRDM2" )) ## approach 1: no_tmm upregulated k-fold validation.
+candidate_genes2 <- list(TMM = c("CPA1", "TERT", "WDR74")) ## approach 1: tmm upregulatd k-fold validation.
+
+
+candidate_genes <- list(TMM =c("ACADM", "CPNE3", "EPHA5", "EPS8L1", "FAXDC2", "FGD4", "GLIPR1L2",
+                               "HOXC9", "KIFAP3", "KYAT3", "MMP16", "NEK7",
+                               "PLEKHA5", "PRDM2", "SATB1", "ZNF197")) # approach 1: no_tmm Upregulated 2-times repeat in k-fold validation.
+candidate_genes2 <- list(TMM = c("ALDH1A2", "CPA1",    
+                                 "FOXK2", "MAGEA9", "PRR7",    
+                                 "RNF126", "SPEF1", "TERT", "TSEN54", "WDR74", "XRCC3")) # approach 1: tmm upregulated 2-times repeat in k-fold validation.
+
+
+
+candidate_genes <- list(TMM = c("CPNE8", "EPS8L1", "FAXDC2", "IGSF10", "KIFAP3", "MYO9A",
+                                "PGM2L1", "PYROXD1", "SH3GLB1")) # NO_TMM upregulated: approach 3; 3-times repeat in 5-fold validation.
+candidate_genes2 <- list(TMM = c("TERT", "TSEN54", "WDR24", "WDR74")) # TMM upregulated: approach 3; 3-times repeat in 5-fold validation.
+
+
+candidate_genes <- list(TMM = c("CPNE8", "EPS8L1", "FAXDC2", "IGSF10", "KIFAP3",  
+                                "MYO9A", "PGM2L1", "PYROXD1", "RAB5B", "SH3GLB1")) # NO_TMM upregulated: approach 3; 2 times repeat in 5-fold validation.
+candidate_genes2 <- list(TMM = c("DDX39A", "TERT", "TSEN54", "WDR24", "WDR74")) # TMM upregulated: approach 3; 2 times repeat in 5-fold validation.
+
+
+gsvapar <- gsvaParam(as.matrix(tmm_lcpm_target), candidate_genes2, kcdf = "Gaussian")
+gsva_result <- gsva(gsvapar)
+gsva_result <- as.data.frame(gsva_result)
+rownames(gsva_result) <- NULL
+gsva_long <- gsva_result %>%
+  pivot_longer(cols = everything(),
+               names_to = "SampleID",
+               values_to = "GSVA_Score_down"
+  )
+
+gsvapar2 <- gsvaParam(as.matrix(tmm_lcpm_target), candidate_genes, kcdf = "Gaussian")
+gsva_result2 <- gsva(gsvapar2)
+gsva_result2 <- as.data.frame(gsva_result2)
+rownames(gsva_result2) <- NULL
+gsva_long2 <- gsva_result2 %>%
+  pivot_longer(cols = everything(),
+               names_to = "SampleID",
+               values_to = "GSVA_Score_up"
+  )
+
+gsva_long <- left_join(gsva_long, gsva_long2, by = "SampleID")
+gsva_long <- left_join(gsva_long, metadata[, c("SampleID", "TMM", "TMM_Case", "Telomere.Content")], by = "SampleID")
+gsva_long$GSVA_Score <- gsva_long$GSVA_Score_up - gsva_long$GSVA_Score_down
+
+ggplot(gsva_long, aes(x = Telomere.Content, y = GSVA_Score, colour = TMM)) +
+  geom_point(size = 2, alpha = 0.7) +
+ scale_x_log10() +
+  labs(x = "Telomere Content",
+       y = "GSVA Score") +
+  theme_classic()
 

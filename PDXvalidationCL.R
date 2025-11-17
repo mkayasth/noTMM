@@ -54,12 +54,39 @@ tmm_lcpm_cl <- cpm(dge_TMM, log = TRUE, prior.count = 1)
 
 
 ## boxplot to see whats up.
-best_geneset <- list(TMM = c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", "MAGEA9", "SPEF1", "TERT", "WDR74")) # 5-fold validation tmm winner.
-best_geneset2 <- list(TMM = c("ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2")) # 5-fold validation no_tmm winner.
+best_geneset1 <- list(TMM = c("CPA1", "TERT", "WDR74")) # TMM upregulated: approach 1; 3-times repeated in k-fold validation.
+best_geneset2 <- list(TMM = c("ACADM", "EPHA5", "FAXDC2", "GLIPR1L2", "HOXC9", "KIFAP3",
+                   "NEK7", "PRDM2")) # NO_TMM upregulated: approach 1; 3-times repeated in k-fold validation.
 
-best_geneset <- list(TMM = c("LCN15", "TPGS1", "TSEN54", "WDR74")) # 5-fold validation tmm winner.
-best_geneset2 <- list(TMM = c("ACADM", "CALM2", "CPNE3", "FAXDC2",              # 5-fold validation no_tmm winner.
-                             "GLS", "HECW2", "IGSF10", "KIF13A", "KIFAP3"))
+best_geneset1 <- list(TMM = c("ALDH1A2", "CPA1",    
+                   "FOXK2", "MAGEA9", "PRR7",    
+                   "RNF126", "SPEF1", "TERT", "TSEN54", "WDR74", "XRCC3")) # approach 1: tmm upregulated 2-times repeat in k-fold validation.
+best_geneset2 <- list(TMM = c("ACADM", "CPNE3", "EPHA5", "EPS8L1", "FAXDC2", "FGD4", "GLIPR1L2",
+                   "HOXC9", "KIFAP3", "KYAT3", "MMP16", "NEK7",
+                   "PLEKHA5", "PRDM2", "SATB1", "ZNF197")) # approach 1: no_tmm Upregulated 2-times repeat in k-fold validation.
+
+
+
+
+best_geneset1 <- list(TMM = c("TERT", "TSEN54", "WDR24", "WDR74")) # TMM-upregulated: approach 3; 3-times repeat in k-fold validation.
+best_geneset2 <- list(TMM = c("CPNE8", "EPS8L1", "FAXDC2", "IGSF10", "KIFAP3", "MYO9A",
+                   "PGM2L1", "PYROXD1", "SH3GLB1")) # no_tmm upregulated: approach 3; 3-times repeat in k-fold validation.
+
+best_geneset1 <- list(TMM = c("DDX39A", "TERT", "TSEN54", "WDR24", "WDR74")) # TMM-upregulated: approach 3; 2-times repeat in k-fold validation.
+best_geneset2 <- list(TMM = c("CPNE8", "EPS8L1", "FAXDC2", "IGSF10", "KIFAP3",  "MYO9A", 
+                   "PGM2L1", "PYROXD1", "RAB5B", "SH3GLB1")) # no_tmm upregulated: approach 3; 2-times repeat in k-fold validation.
+
+
+
+best_geneset1 <- list(TMM = c("HTR6", "TPGS1", "TSEN54", "WDR24", "WDR74")) # TMM-upregulated: approach 2.
+best_geneset2 <- list(TMM = c("CPNE3", "DYNC1I2", "EPS8L1", "FAXDC2", "GLS", "HECW2",   
+                   "IGSF10",  "KCTD21",  "PGM2L1")) # no_tmm upregulated: approach 2.
+
+best_geneset1 <- list(TMM = c("DDN", "HTR6", "PIDD1", "TPGS1", 
+                   "TSEN54", "WDR24", "WDR74")) # tmm upregulated: approach 2; 2-times repeat in 5-fold validation.
+best_geneset2 <- list(TMM = c("CALM2", "CPNE3", "DYNC1I2", "EPS8L1", "FAXDC2", "GLS", "HECW2",
+                   "IGSF10", "KCTD21", "LIFR", "PGM2L1", "PYROXD1")) #no_tmm upregulated: approach 2; 2-times repeat in 5-fold validation.
+
 
 gsvapar <- gsvaParam(as.matrix(tmm_lcpm_cl), best_geneset, kcdf = "Gaussian")
 gsva_result <- gsva(gsvapar)
@@ -163,12 +190,7 @@ tmm_lcpm_pdx <- cpm(dge_TMM, log = TRUE, prior.count = 1)
 
 
 ## boxplot to see whats up.
-best_geneset <- list(TMM = c("ALG1L2", "ALOX12B", "CPA1", "DDX39A", "MAGEA9", "SPEF1", "TERT", "WDR74")) # 5-fold validation tmm winner.
-best_geneset2 <- list(TMM = c("ACADM", "EIF4G3", "EPS8L1", "FAXDC2", "FGD4", "HOXC9", "ITPRID2", "MMP16", "PRDM2")) # 5-fold validation no_tmm winner.
 
-best_geneset <- list(TMM = c("LCN15", "TPGS1", "TSEN54", "WDR74")) # 5-fold validation tmm winner.
-best_geneset2 <- list(TMM = c("ACADM", "CALM2", "CPNE3", "FAXDC2",              # 5-fold validation no_tmm winner.
-                              "GLS", "HECW2", "IGSF10", "KIF13A", "KIFAP3"))
 
 gsvapar <- gsvaParam(as.matrix(tmm_lcpm_pdx), best_geneset, kcdf = "Gaussian")
 gsva_result <- gsva(gsvapar)
